@@ -1,1709 +1,254 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="description" content="Sistema de agendamento da Nails by Nascimento">
+    <title>Nails by Nascimento | Agendamento</title>
 
-    <meta name="description"
-          content="Sistema de agendamento Nails by Nascimento — Manicure Profissional">
-
-    <title>nailsbynascimento — Agendamento</title>
-
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Poppins:wght@400;500;600;700&display=swap"
-          rel="stylesheet">
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
-    <style>
-:root {
-    --cinza-logo: #A6A6A6;
-    --cinza-principal: #A6A6A6;
-    --cinza-escuro: #555555;
-    --cinza-muito-escuro: #333333;
-    --cinza-claro: #E8E8E8;
-    --cinza-suave: #F2F2F2;
-    --fundo: #F7F7F7;
-    --branco: #FFFFFF;
-    --texto: #3E3E3E;
-    --texto-suave: #777777;
-    --borda: #D8D8D8;
-    --sucesso: #5F7564;
-    --erro: #9B5B5B;
-    --sombra: 0 8px 25px rgba(0,0,0,.08);
-    --sombra-forte: 0 12px 35px rgba(0,0,0,.12);
-}
+    <!-- FAVICON -->
 
-* { margin:0; padding:0; box-sizing:border-box; }
-html { scroll-behavior:smooth; }
-body {
-    min-height:100vh;
-    background:linear-gradient(135deg,#F7F7F7,#EEEEEE);
-    color:var(--texto);
-    font-family:'Poppins',sans-serif;
-    font-size:16px;
-    line-height:1.6;
-}
-button,input,select,textarea { font-family:'Poppins',sans-serif; }
-button { cursor:pointer; }
-a { text-decoration:none; }
-.hidden { display:none !important; }
+    <link rel="icon" type="image/png" href="logo.png">
 
-.container {
-    width:100%; max-width:520px; min-height:100vh; margin:0 auto;
-    background:var(--fundo); box-shadow:0 0 50px rgba(0,0,0,.10);
-    position:relative; overflow:hidden;
-}
-
-header {
-    position:relative; padding:35px 25px 65px; text-align:center; color:#fff;
-    background:linear-gradient(145deg,#555 0%,#A6A6A6 55%,#8F8F8F 100%);
-    border-radius:0 0 35px 35px; overflow:hidden;
-}
-header::before {
-    content:""; position:absolute; width:250px; height:250px; top:-120px; right:-100px;
-    background:rgba(255,255,255,.08); border-radius:50%;
-}
-header::after {
-    content:""; position:absolute; width:180px; height:180px; bottom:-110px; left:-80px;
-    background:rgba(255,255,255,.06); border-radius:50%;
-}
-.logo {
-    position:relative; z-index:2; display:flex; align-items:center; justify-content:center;
-    width:190px; height:105px; margin:0 auto 8px; overflow:hidden;
-}
-.logo img { width:100%; height:100%; object-fit:contain; mix-blend-mode:normal; }
-header h1 {
-    position:relative; z-index:2; margin-bottom:5px; color:#fff;
-    font-family:'Cormorant Garamond',serif; font-size:34px; font-weight:600;
-    letter-spacing:1px; line-height:1.1;
-}
-header p {
-    position:relative; z-index:2; color:rgba(255,255,255,.9); font-size:12px; letter-spacing:2px;
-}
-
-nav {
-    display:flex; gap:7px; margin:-30px 18px 0; position:relative; z-index:5; padding:8px;
-    background:#fff; border:1px solid var(--borda); border-radius:18px; box-shadow:var(--sombra);
-}
-nav button {
-    flex:1; padding:12px 5px; background:transparent; border:none; border-radius:13px;
-    color:var(--texto-suave); font-size:12px; font-weight:600; transition:all .25s ease;
-}
-nav button:hover { background:var(--cinza-suave); color:var(--cinza-muito-escuro); }
-nav button.ativo { background:var(--cinza-principal); color:#fff; box-shadow:0 4px 12px rgba(0,0,0,.12); }
-
-section { padding:30px 22px 10px; }
-section h2 { margin-bottom:5px; color:var(--cinza-muito-escuro); font-family:'Cormorant Garamond',serif; font-size:28px; font-weight:700; letter-spacing:.5px; }
-.subtitulo { margin-bottom:18px; color:var(--texto-suave); font-size:13px; }
-
-.card-servico {
-    display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; padding:18px;
-    background:#fff; border:1px solid var(--borda); border-radius:18px; box-shadow:var(--sombra);
-    cursor:pointer; transition:all .25s ease;
-}
-.card-servico:hover { transform:translateY(-2px); border-color:var(--cinza-principal); box-shadow:var(--sombra-forte); }
-.card-servico.selecionado { background:linear-gradient(135deg,#fff,#eee); border:2px solid var(--cinza-principal); }
-.card-servico .info { min-width:0; }
-.card-servico h3 { color:var(--cinza-muito-escuro); font-family:'Cormorant Garamond',serif; font-size:21px; font-weight:700; }
-.card-servico span { color:var(--texto-suave); font-size:12px; }
-.preco { color:var(--cinza-escuro); font-family:'Cormorant Garamond',serif; font-size:23px; font-weight:700; white-space:nowrap; }
-.tag-pacote { display:inline-block; margin-top:4px; padding:2px 9px; background:var(--cinza-claro); border-radius:10px; color:var(--cinza-escuro); font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.5px; }
-
-.dias { display:flex; gap:9px; overflow-x:auto; margin-bottom:20px; padding:4px 2px 10px; }
-.dias::-webkit-scrollbar { height:4px; }
-.dias::-webkit-scrollbar-thumb { background:var(--cinza-principal); border-radius:10px; }
-.dia { flex:0 0 63px; padding:11px 5px; text-align:center; background:#fff; border:1px solid var(--borda); border-radius:17px; cursor:pointer; transition:all .25s ease; }
-.dia:hover { border-color:var(--cinza-principal); transform:translateY(-2px); }
-.dia .num { display:block; color:var(--cinza-muito-escuro); font-family:'Cormorant Garamond',serif; font-size:23px; font-weight:700; }
-.dia .sem { color:var(--texto-suave); font-size:10px; text-transform:uppercase; }
-.dia.selecionado { background:var(--cinza-principal); border-color:var(--cinza-principal); box-shadow:0 5px 15px rgba(0,0,0,.12); }
-.dia.selecionado .num,.dia.selecionado .sem { color:#fff; }
-
-.horarios { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:22px; }
-.horario { padding:13px 5px; text-align:center; background:#fff; border:1px solid var(--borda); border-radius:14px; color:var(--texto); font-size:14px; font-weight:600; cursor:pointer; transition:all .2s ease; }
-.horario:hover:not(.indisponivel) { background:var(--cinza-suave); border-color:var(--cinza-principal); }
-.horario.selecionado { background:var(--cinza-escuro); border-color:var(--cinza-escuro); color:#fff; box-shadow:0 5px 15px rgba(0,0,0,.15); }
-.horario.indisponivel { background:#eee; color:#bbb; text-decoration:line-through; cursor:not-allowed; }
-
-.form-card { margin-bottom:16px; padding:20px; background:#fff; border:1px solid var(--borda); border-radius:18px; box-shadow:var(--sombra); }
-.form-card h2 { margin-bottom:10px; }
-label { display:block; margin:12px 0 5px; color:var(--cinza-escuro); font-size:12px; font-weight:600; }
-input { width:100%; padding:13px; background:#fafafa; border:1px solid var(--borda); border-radius:12px; outline:none; color:var(--texto); font-size:14px; transition:all .2s ease; }
-input:focus { background:#fff; border-color:var(--cinza-principal); box-shadow:0 0 0 3px rgba(166,166,166,.15); }
-input.invalido { border-color:var(--erro); }
-.campo-erro { display:none; margin-top:4px; color:var(--erro); font-size:11px; }
-.campo-erro.mostrar { display:block; }
-
-.resumo { margin-bottom:16px; padding:20px; background:#fff; border:1px dashed var(--cinza-principal); border-radius:18px; }
-.resumo p { display:flex; justify-content:space-between; gap:15px; padding:5px 0; color:var(--texto-suave); font-size:13px; }
-.resumo b { color:var(--cinza-muito-escuro); font-weight:600; text-align:right; }
-
-.btn-confirmar { display:block; width:100%; padding:16px; background:var(--cinza-escuro); border:none; border-radius:15px; color:#fff; font-size:15px; font-weight:600; cursor:pointer; box-shadow:var(--sombra); transition:all .25s ease; }
-.btn-confirmar:hover:not(:disabled) { background:var(--cinza-muito-escuro); transform:translateY(-2px); box-shadow:var(--sombra-forte); }
-.btn-confirmar:active:not(:disabled) { transform:scale(.98); }
-.btn-confirmar:disabled { background:#BEBEBE; opacity:.65; cursor:not-allowed; }
-
-.appointment { margin-bottom:15px; padding:20px; background:#fff; border:1px solid var(--borda); border-left:4px solid var(--cinza-principal); border-radius:17px; box-shadow:var(--sombra); }
-.appointment h3 { margin-bottom:5px; color:var(--cinza-muito-escuro); font-family:'Cormorant Garamond',serif; font-size:22px; }
-.appointment p { color:var(--texto-suave); font-size:13px; }
-.status { display:inline-block; margin-top:8px; padding:3px 10px; background:#eee; border-radius:10px; color:var(--cinza-escuro); font-size:10px; font-weight:600; text-transform:uppercase; }
-.cancelar { margin-top:12px; padding:8px 13px; background:#fff; border:1px solid #ccc; border-radius:10px; color:var(--cinza-escuro); font-size:12px; cursor:pointer; transition:.2s; }
-.cancelar:hover { background:#eee; }
-.empty { padding:25px; text-align:center; background:#fff; border:1px dashed var(--borda); border-radius:16px; color:var(--texto-suave); font-size:13px; }
-
-.aviso { padding:10px 24px 20px; text-align:center; color:var(--texto-suave); font-size:11px; }
-footer { padding:28px 20px; text-align:center; background:#eee; color:var(--texto-suave); font-size:12px; }
-footer a { color:var(--cinza-escuro); font-weight:600; text-decoration:none; }
-footer a:hover { color:var(--cinza-muito-escuro); text-decoration:underline; }
-
-.toast { position:fixed; left:50%; bottom:22px; z-index:9999; width:max-content; max-width:90%; padding:13px 20px; background:var(--cinza-muito-escuro); border-radius:12px; color:#fff; font-size:13px; box-shadow:var(--sombra-forte); opacity:0; pointer-events:none; transform:translate(-50%,20px); transition:all .3s ease; }
-.toast.show { opacity:1; transform:translate(-50%,0); }
-
-@media (max-width:520px) { body { background:var(--fundo); } .container { box-shadow:none; } }
-@media (max-width:380px) {
-    header h1 { font-size:31px; }
-    .logo { width:175px; height:95px; }
-    .horarios { grid-template-columns:repeat(2,1fr); }
-    nav button { font-size:10px; }
-    section { padding-left:18px; padding-right:18px; }
-}
-</style>
+    <!-- Estilos -->
+    <link rel="stylesheet" href="styles.css">
 </head>
-
 <body>
-
-<div class="container">
-
-    <!-- =========================
-         HEADER
-    ========================== -->
-
-    <header>
-
-        <div class="logo">
-            <img src="logo.png" alt="Nails by Nascimento - Manicure">
-        </div>
-
-        <h1>
-            Carol Nascimento
-        </h1>
-
-        <p>
-            ✨ nailsbynascimento ·
-            Manicure Profissional
-        </p>
-
-    </header>
-
-
-    <!-- =========================
-         MENU
-    ========================== -->
-
-    <nav aria-label="Navegação principal">
-
-        <button
-            class="ativo"
-            data-view="agendar">
-
-            Agendar
-
-        </button>
-
-        <button
-            data-view="servicos">
-
-            Serviços
-
-        </button>
-
-        <button
-            data-view="horarios">
-
-            Meus horários
-
-        </button>
-
-    </nav>
-
-
-    <main>
-
-        <!-- =========================
-             AGENDAMENTO
-        ========================== -->
-
-        <section id="view-agendar">
-
-            <h2>
-                Escolha o serviço
-            </h2>
-
-            <p class="subtitulo">
-                Selecione o que deseja fazer hoje
-            </p>
-
-            <div id="servicosAgendamento"></div>
-
-
-            <h2>
-                Escolha o dia
-            </h2>
-
-            <p class="subtitulo">
-                Só aparecem os dias com horário livre
-            </p>
-
-            <div
-                class="dias"
-                id="dias">
-            </div>
-
-
-            <h2>
-                Escolha o horário
-            </h2>
-
-            <p
-                class="subtitulo"
-                id="dataSelecionadaTexto">
-            </p>
-
-            <div
-                class="horarios"
-                id="horarios">
-            </div>
-
-
-            <!-- DADOS DO CLIENTE -->
-
-            <div class="form-card">
-
-                <h2>
-                    Seus dados
-                </h2>
-
-                <label for="nome">
-                    Nome
-                </label>
-
-                <input
-                    id="nome"
-                    type="text"
-                    placeholder="Digite seu nome"
-                    autocomplete="name"
-                >
-
-                <div
-                    id="erroNome"
-                    class="campo-erro">
-
-                    Informe seu nome.
-
+    <div class="app">
+        <!-- HERO -->
+        <header class="hero">
+            <div class="brand">
+                <img src="logo.png" alt="Logo Nails by Nascimento" onerror="this.style.display='none'">
+                <div>
+                    <h1>Carol Nascimento</h1>
+                    <p>nailsbynascimento · manicure profissional</p>
                 </div>
+            </div>
+            <div class="hero-copy">
+                <h2>Seu tempo, cuidado<br>em cada detalhe.</h2>
+                <p>Escolha seu procedimento e envie uma solicitação. A confirmação acontece depois da aprovação da Carol.</p>
+            </div>
+        </header>
 
+        <!-- NAVEGAÇÃO -->
+        <nav aria-label="Navegação">
+            <button class="active" data-view="book">Agendar</button>
+            <button data-view="mine">Meus horários</button>
+            <button data-view="admin">Área da Carol</button>
+        </nav>
 
-                <label for="telefone">
-                    Telefone
-                </label>
-
-                <input
-                    id="telefone"
-                    type="tel"
-                    placeholder="(11) 99999-9999"
-                    autocomplete="tel"
-                    maxlength="15"
-                >
-
-                <div
-                    id="erroTelefone"
-                    class="campo-erro">
-
-                    Informe um telefone válido.
-
+        <main class="page">
+            <!-- VIEW: AGENDAR -->
+            <section class="view active" id="bookView">
+                <div class="title-row">
+                    <div>
+                        <span class="eyebrow">Novo agendamento</span>
+                        <h2>Vamos escolher seu horário</h2>
+                        <p class="sub">Preencha em poucos passos. Sem criar senha.</p>
+                    </div>
                 </div>
-
-            </div>
-
-
-            <!-- RESUMO -->
-
-            <div class="resumo">
-
-                <p>
-                    <span>
-                        Serviço
-                    </span>
-
-                    <b id="resumoServico">
-                        —
-                    </b>
-                </p>
-
-                <p>
-                    <span>
-                        Data
-                    </span>
-
-                    <b id="resumoData">
-                        —
-                    </b>
-                </p>
-
-                <p>
-                    <span>
-                        Horário
-                    </span>
-
-                    <b id="resumoHorario">
-                        —
-                    </b>
-                </p>
-
-                <p>
-                    <span>
-                        Valor
-                    </span>
-
-                    <b id="resumoValor">
-                        —
-                    </b>
-                </p>
-
-            </div>
-
-
-            <button
-                class="btn-confirmar"
-                id="confirmar"
-                disabled>
-
-                Confirmar agendamento
-
-            </button>
-
-        </section>
-
-
-        <!-- =========================
-             SERVIÇOS
-        ========================== -->
-
-        <section
-            id="view-servicos"
-            class="hidden">
-
-            <h2>
-                Serviços
-            </h2>
-
-            <p class="subtitulo">
-                Confira os procedimentos disponíveis.
-            </p>
-
-            <div id="listaServicos"></div>
-
-        </section>
-
-
-        <!-- =========================
-             MEUS HORÁRIOS
-        ========================== -->
-
-        <section
-            id="view-horarios"
-            class="hidden">
-
-            <h2>
-                Meus horários
-            </h2>
-
-            <p class="subtitulo">
-                Seus agendamentos ficam salvos
-                neste navegador.
-            </p>
-
-            <div id="meusAgendamentos"></div>
-
-        </section>
-
-    </main>
-
-
-    <p class="aviso">
-
-        Não é preciso senha para agendar —
-        basta seu nome e telefone.
-
-    </p>
-
-
-    <footer>
-
-        Dúvidas?
-        Fale direto pelo WhatsApp
-
-        <br>
-
-        <a
-            href="https://instagram.com/nailsbynascimento"
-            target="_blank"
-            rel="noopener">
-
-            @nailsbynascimento no Instagram
-
-        </a>
-
-    </footer>
-
-</div>
-
-
-<div
-    class="toast"
-    id="toast"
-    role="status">
-</div>
-
-
-<script>
-
-'use strict';
-
-
-/* =====================================================
-   SERVIÇOS
-===================================================== */
-
-const SERVICOS = [
-
-    {
-        id: 1,
-        nome: "Manicure simples",
-        duracao: "40 min",
-        preco: 35
-    },
-
-    {
-        id: 2,
-        nome: "Alongamento em gel",
-        duracao: "1h 30min",
-        preco: 90
-    },
-
-    {
-        id: 3,
-        nome: "Pacote Mãos + Pés",
-        duracao: "1h 10min",
-        preco: 70,
-        pacote: true
-    }
-
-];
-
-
-const HORARIOS = [
-
-    "09:00",
-    "10:00",
-    "11:00",
-    "14:00",
-    "15:00",
-    "16:00"
-
-];
-
-
-/*
-   Horários inicialmente bloqueados.
-*/
-
-const INDISPONIVEIS = [
-
-    "11:00",
-    "16:00"
-
-];
-
-
-const STORAGE_KEY =
-    "agendamentos_nails_v2";
-
-
-/* =====================================================
-   ESTADO DA APLICAÇÃO
-===================================================== */
-
-let estado = {
-
-    servico: null,
-
-    data: null,
-
-    horario: null
-
-};
-
-
-/* =====================================================
-   FUNÇÕES AUXILIARES
-===================================================== */
-
-const $ = id =>
-    document.getElementById(id);
-
-
-function moeda(valor) {
-
-    return valor.toLocaleString(
-        "pt-BR",
-        {
-            style: "currency",
-            currency: "BRL"
-        }
-    );
-
-}
-
-
-function dataBR(data) {
-
-    return data.toLocaleDateString(
-        "pt-BR",
-        {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric"
-        }
-    );
-
-}
-
-
-function chaveData(data) {
-
-    const novaData =
-        new Date(data);
-
-    novaData.setHours(
-        12,
-        0,
-        0,
-        0
-    );
-
-    return novaData
-        .toISOString()
-        .slice(0, 10);
-
-}
-
-
-const nomesDias = [
-
-    "DOM",
-    "SEG",
-    "TER",
-    "QUA",
-    "QUI",
-    "SEX",
-    "SÁB"
-
-];
-
-
-/* =====================================================
-   LOCAL STORAGE
-===================================================== */
-
-function obterAgendamentos() {
-
-    try {
-
-        return JSON.parse(
-            localStorage.getItem(
-                STORAGE_KEY
-            ) || "[]"
-        );
-
-    } catch {
-
-        return [];
-
-    }
-
-}
-
-
-function salvarLista(lista) {
-
-    localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify(lista)
-    );
-
-}
-
-
-/* =====================================================
-   TELEFONE
-===================================================== */
-
-function formatarTelefone(valor) {
-
-    valor =
-        valor
-        .replace(/\D/g, "")
-        .slice(0, 11);
-
-
-    if (valor.length <= 10) {
-
-        return valor.replace(
-            /(\d{2})(\d{4})(\d{0,4})/,
-            "($1) $2-$3"
-        );
-
-    }
-
-
-    return valor.replace(
-        /(\d{2})(\d{5})(\d{0,4})/,
-        "($1) $2-$3"
-    );
-
-}
-
-
-/* =====================================================
-   GERAR DATAS
-===================================================== */
-
-function gerarDias() {
-
-    const container =
-        $("dias");
-
-    container.innerHTML = "";
-
-
-    for (
-        let i = 0;
-        i < 7;
-        i++
-    ) {
-
-        const data =
-            new Date();
-
-        data.setHours(
-            12,
-            0,
-            0,
-            0
-        );
-
-        data.setDate(
-            data.getDate() + i
-        );
-
-
-        const dataFormatada =
-            chaveData(data);
-
-
-        const div =
-            document.createElement(
-                "div"
-            );
-
-
-        div.className =
-            "dia" +
-            (i === 0
-                ? " selecionado"
-                : "");
-
-
-        div.dataset.data =
-            dataFormatada;
-
-
-        div.innerHTML = `
-
-            <span class="num">
-                ${String(
-                    data.getDate()
-                ).padStart(2, "0")}
-            </span>
-
-            <span class="sem">
-                ${nomesDias[
-                    data.getDay()
-                ]}
-            </span>
-
-        `;
-
-
-        div.onclick = () => {
-
-            selecionarData(
-                dataFormatada,
-                div
-            );
-
-        };
-
-
-        container.appendChild(div);
-
-
-        if (i === 0) {
-
-            estado.data =
-                dataFormatada;
-
-        }
-
-    }
-
-
-    renderHorarios();
-
-}
-
-
-/* =====================================================
-   CARDS DE SERVIÇO
-===================================================== */
-
-function criarCardServico(
-    servico,
-    selecionavel
-) {
-
-    const card =
-        document.createElement(
-            "div"
-        );
-
-
-    card.className =
-        "card-servico" +
-        (
-            estado.servico?.id ===
-            servico.id
-                ? " selecionado"
-                : ""
-        );
-
-
-    card.innerHTML = `
-
-        <div class="info">
-
-            <h3>
-                ${servico.nome}
-            </h3>
-
-            <span>
-                ${servico.duracao}
-            </span>
-
-            ${
-                servico.pacote
-                    ? `
-                        <div class="tag-pacote">
-                            Pacote
+                <div class="booking-grid">
+                    <div>
+                        <article class="panel">
+                            <div class="step">
+                                <i>1</i>
+                                <h3>Qual serviço você deseja?</h3>
+                            </div>
+                            <div id="services" class="service-list"></div>
+                        </article>
+
+                        <article class="panel">
+                            <div class="step">
+                                <i>2</i>
+                                <h3>Escolha o dia e o horário</h3>
+                            </div>
+                            <div id="dates" class="dates"></div>
+                            <p id="chosenDate" class="sub"></p>
+                            <div id="slots" class="slots"></div>
+                        </article>
+
+                        <article class="panel">
+                            <div class="step">
+                                <i>3</i>
+                                <h3>Seus dados</h3>
+                            </div>
+                            <div class="two">
+                                <div>
+                                    <label for="name">Nome</label>
+                                    <input id="name" autocomplete="name" placeholder="Como podemos te chamar?">
+                                </div>
+                                <div>
+                                    <label for="phone">WhatsApp</label>
+                                    <input id="phone" autocomplete="tel" inputmode="numeric" maxlength="15" placeholder="(11) 99999-9999">
+                                </div>
+                            </div>
+                            <label>
+                                <input id="privacy" type="checkbox" style="width:auto;margin-right:7px">
+                                Autorizo o uso destes dados somente para este agendamento.
+                            </label>
+                            <details class="privacy-note">
+                                <summary>Ver política de privacidade</summary>
+                                <p>Usamos seu nome e telefone apenas para organizar seu agendamento e enviar lembretes pelo WhatsApp. Nenhum dado é compartilhado com terceiros nem usado para outra finalidade, conforme a LGPD.</p>
+                            </details>
+                        </article>
+                    </div>
+
+                    <aside class="panel summary">
+                        <span class="eyebrow">Resumo da solicitação</span>
+                        <h2>Quase lá!</h2>
+                        <dl>
+                            <div>
+                                <dt>Serviço</dt>
+                                <dd id="sService">—</dd>
+                            </div>
+                            <div>
+                                <dt>Data</dt>
+                                <dd id="sDate">—</dd>
+                            </div>
+                            <div>
+                                <dt>Horário</dt>
+                                <dd id="sTime">—</dd>
+                            </div>
+                            <div>
+                                <dt>Valor</dt>
+                                <dd id="sPrice">—</dd>
+                            </div>
+                        </dl>
+                        <div class="notice">
+                            A solicitação ficará <b>pendente</b> até a Carol aprovar. O sinal de R$ 30 será combinado após a aprovação, quando aplicável.
                         </div>
-                    `
-                    : ""
-            }
-
-        </div>
-
-        <div class="preco">
-
-            ${moeda(servico.preco)}
-
-        </div>
-
-    `;
-
-
-    if (selecionavel) {
-
-        card.onclick = () => {
-
-            estado.servico =
-                servico;
-
-            renderServicos();
-
-            atualizarResumo();
-
-        };
-
-    }
-
-
-    return card;
-
-}
-
-
-/* =====================================================
-   RENDERIZAR SERVIÇOS
-===================================================== */
-
-function renderServicos() {
-
-    const agendamento =
-        $("servicosAgendamento");
-
-
-    const lista =
-        $("listaServicos");
-
-
-    agendamento.innerHTML = "";
-
-    lista.innerHTML = "";
-
-
-    SERVICOS.forEach(
-        servico => {
-
-            agendamento.appendChild(
-
-                criarCardServico(
-                    servico,
-                    true
-                )
-
-            );
-
-
-            lista.appendChild(
-
-                criarCardServico(
-                    servico,
-                    false
-                )
-
-            );
-
-        }
-    );
-
-}
-
-
-/* =====================================================
-   SELECIONAR DATA
-===================================================== */
-
-function selecionarData(
-    data,
-    elemento
-) {
-
-    estado.data =
-        data;
-
-
-    estado.horario =
-        null;
-
-
-    document
-        .querySelectorAll(".dia")
-        .forEach(
-            dia =>
-                dia.classList.remove(
-                    "selecionado"
-                )
-        );
-
-
-    elemento.classList.add(
-        "selecionado"
-    );
-
-
-    renderHorarios();
-
-    atualizarResumo();
-
-}
-
-
-/* =====================================================
-   VERIFICAR HORÁRIO OCUPADO
-===================================================== */
-
-function horarioJaAgendado(
-    data,
-    horario
-) {
-
-    return obterAgendamentos()
-        .some(
-            agendamento =>
-
-                agendamento.data === data &&
-
-                agendamento.horario ===
-                    horario &&
-
-                agendamento.status !==
-                    "cancelado"
-
-        );
-
-}
-
-
-/* =====================================================
-   RENDERIZAR HORÁRIOS
-===================================================== */
-
-function renderHorarios() {
-
-    const container =
-        $("horarios");
-
-
-    container.innerHTML = "";
-
-
-    const data =
-        estado.data
-            ? new Date(
-                estado.data +
-                "T12:00:00"
-              )
-            : new Date();
-
-
-    $("dataSelecionadaTexto")
-        .textContent =
-            data.toLocaleDateString(
-                "pt-BR",
-                {
-                    weekday: "long",
-                    day: "2-digit",
-                    month: "long"
-                }
-            );
-
-
-    HORARIOS.forEach(
-        horario => {
-
-            const ocupado =
-
-                INDISPONIVEIS.includes(
-                    horario
-                )
-
-                ||
-
-                horarioJaAgendado(
-                    estado.data,
-                    horario
-                );
-
-
-            const div =
-                document.createElement(
-                    "div"
-                );
-
-
-            div.className =
-                "horario";
-
-
-            if (ocupado) {
-
-                div.classList.add(
-                    "indisponivel"
-                );
-
-            }
-
-
-            if (
-                estado.horario ===
-                horario
-            ) {
-
-                div.classList.add(
-                    "selecionado"
-                );
-
-            }
-
-
-            div.textContent =
-                horario;
-
-
-            if (!ocupado) {
-
-                div.onclick = () => {
-
-                    estado.horario =
-                        horario;
-
-                    renderHorarios();
-
-                    atualizarResumo();
-
-                };
-
-            }
-
-
-            container.appendChild(div);
-
-        }
-    );
-
-}
-
-
-/* =====================================================
-   ATUALIZAR RESUMO
-===================================================== */
-
-function atualizarResumo() {
-
-    $("resumoServico")
-        .textContent =
-            estado.servico?.nome ||
-            "—";
-
-
-    $("resumoValor")
-        .textContent =
-            estado.servico
-                ? moeda(
-                    estado.servico.preco
-                  )
-                : "—";
-
-
-    $("resumoHorario")
-        .textContent =
-            estado.horario ||
-            "—";
-
-
-    $("resumoData")
-        .textContent =
-            estado.data
-                ? dataBR(
-                    new Date(
-                        estado.data +
-                        "T12:00:00"
-                    )
-                  )
-                : "—";
-
-
-    const nome =
-        $("nome")
-        .value
-        .trim();
-
-
-    const telefone =
-        $("telefone")
-        .value
-        .replace(
-            /\D/g,
-            ""
-        );
-
-
-    $("confirmar")
-        .disabled = !(
-            estado.servico &&
-
-            estado.data &&
-
-            estado.horario &&
-
-            nome.length >= 2 &&
-
-            telefone.length >= 10
-        );
-
-}
-
-
-/* =====================================================
-   VALIDAÇÃO
-===================================================== */
-
-function validar() {
-
-    let valido = true;
-
-
-    const nome =
-        $("nome");
-
-
-    const telefone =
-        $("telefone");
-
-
-    const erroNome =
-        $("erroNome");
-
-
-    const erroTelefone =
-        $("erroTelefone");
-
-
-    nome.classList.remove(
-        "invalido"
-    );
-
-
-    telefone.classList.remove(
-        "invalido"
-    );
-
-
-    erroNome.classList.remove(
-        "mostrar"
-    );
-
-
-    erroTelefone.classList.remove(
-        "mostrar"
-    );
-
-
-    if (
-        nome.value
-            .trim()
-            .length < 2
-    ) {
-
-        nome.classList.add(
-            "invalido"
-        );
-
-        erroNome.classList.add(
-            "mostrar"
-        );
-
-        valido = false;
-
-    }
-
-
-    if (
-        telefone.value
-            .replace(/\D/g, "")
-            .length < 10
-    ) {
-
-        telefone.classList.add(
-            "invalido"
-        );
-
-        erroTelefone.classList.add(
-            "mostrar"
-        );
-
-        valido = false;
-
-    }
-
-
-    return valido;
-
-}
-
-
-/* =====================================================
-   CONFIRMAR AGENDAMENTO
-===================================================== */
-
-function salvarAgendamento() {
-
-    if (
-        !validar()
-        ||
-
-        !estado.servico
-        ||
-
-        !estado.data
-        ||
-
-        !estado.horario
-    ) {
-
-        mostrarToast(
-            "Complete todos os dados."
-        );
-
-        return;
-
-    }
-
-
-    if (
-        horarioJaAgendado(
-            estado.data,
-            estado.horario
-        )
-    ) {
-
-        mostrarToast(
-            "Esse horário acabou de ser ocupado."
-        );
-
-
-        renderHorarios();
-
-        return;
-
-    }
-
-
-    const lista =
-        obterAgendamentos();
-
-
-    const agendamento = {
-
-        id: Date.now(),
-
-        nome:
-            $("nome")
-            .value
-            .trim(),
-
-        telefone:
-            $("telefone")
-            .value,
-
-        servico:
-            estado.servico.nome,
-
-        valor:
-            estado.servico.preco,
-
-        data:
-            estado.data,
-
-        horario:
-            estado.horario,
-
-        status:
-            "confirmado"
-
-    };
-
-
-    lista.push(
-        agendamento
-    );
-
-
-    salvarLista(
-        lista
-    );
-
-
-    mostrarToast(
-        "Agendamento confirmado! 💅"
-    );
-
-
-    $("nome").value = "";
-
-    $("telefone").value = "";
-
-
-    estado = {
-
-        servico: null,
-
-        data:
-            estado.data,
-
-        horario: null
-
-    };
-
-
-    renderServicos();
-
-    renderHorarios();
-
-    atualizarResumo();
-
-}
-
-
-/* =====================================================
-   MEUS AGENDAMENTOS
-===================================================== */
-
-function renderMeusAgendamentos() {
-
-    const container =
-        $("meusAgendamentos");
-
-
-    const lista =
-        obterAgendamentos()
-        .filter(
-            agendamento =>
-                agendamento.status !==
-                "cancelado"
-        );
-
-
-    container.innerHTML = "";
-
-
-    if (!lista.length) {
-
-        container.innerHTML = `
-
-            <div class="empty">
-
-                Nenhum agendamento
-                encontrado.
-
-                <br>
-
-                Faça seu primeiro
-                agendamento! 💅
-
-            </div>
-
-        `;
-
-        return;
-
-    }
-
-
-    lista
-        .slice()
-        .reverse()
-        .forEach(
-            agendamento => {
-
-                const data =
-                    new Date(
-                        agendamento.data +
-                        "T12:00:00"
-                    );
-
-
-                const card =
-                    document.createElement(
-                        "div"
-                    );
-
-
-                card.className =
-                    "appointment";
-
-
-                card.innerHTML = `
-
-                    <h3>
-                        ${escapeHtml(
-                            agendamento.servico
-                        )}
-                    </h3>
-
-                    <p>
-                        <b>
-                            ${dataBR(data)}
-                        </b>
-
-                        às
-
-                        <b>
-                            ${agendamento.horario}
-                        </b>
+                        <button id="request" class="primary" disabled>Enviar solicitação</button>
+                    </aside>
+                </div>
+            </section>
+
+            <!-- VIEW: MEUS HORÁRIOS -->
+            <section class="view" id="mineView">
+                <div class="title-row">
+                    <div>
+                        <span class="eyebrow">Acompanhe</span>
+                        <h2>Meus horários</h2>
+                        <p class="sub">Consulte usando o mesmo WhatsApp informado ao solicitar.</p>
+                    </div>
+                </div>
+                <article class="panel">
+                    <div class="two">
+                        <div>
+                            <label for="lookup">Seu WhatsApp</label>
+                            <input id="lookup" inputmode="numeric" maxlength="15" placeholder="(11) 99999-9999">
+                        </div>
+                        <div style="align-self:end">
+                            <button id="findAppointments" class="secondary">Consultar agendamentos</button>
+                        </div>
+                    </div>
+                    <div id="myAppointments" style="margin-top:16px" class="empty">
+                        Informe seu WhatsApp para ver suas solicitações.
+                    </div>
+                </article>
+            </section>
+
+            <!-- VIEW: ÁREA DA CAROL (ADMIN) -->
+            <section class="view" id="adminView">
+                <!-- Login -->
+                <div id="adminLogin" class="panel admin-login">
+                    <span class="eyebrow">Área administrativa</span>
+                    <h2>Login da Carol</h2>
+                    <p class="sub">Acesse com suas credenciais do Firebase.</p>
+                    <label for="adminEmail">E-mail</label>
+                    <input id="adminEmail" type="email" placeholder="seu-email@exemplo.com" autocomplete="email">
+                    <label for="adminPassword">Senha</label>
+                    <input id="adminPassword" type="password" placeholder="••••••••">
+                    <button id="adminLoginBtn" class="primary">Entrar no painel</button>
+                    <p class="sub" style="font-size:11px;margin-top:12px">
+                        <em>Credenciais configuradas no Firebase Authentication.</em>
                     </p>
-
-                    <p>
-                        ${escapeHtml(
-                            agendamento.nome
-                        )}
-                        ·
-                        ${escapeHtml(
-                            agendamento.telefone
-                        )}
-                    </p>
-
-                    <p>
-                        ${moeda(
-                            agendamento.valor
-                        )}
-                    </p>
-
-                    <span class="status">
-                        Confirmado
-                    </span>
-
-                    <br>
-
-                    <button class="cancelar">
-
-                        Cancelar agendamento
-
-                    </button>
-
-                `;
-
-
-                card
-                    .querySelector(
-                        ".cancelar"
-                    )
-                    .onclick = () => {
-
-                        if (
-                            confirm(
-                                "Deseja cancelar este agendamento?"
-                            )
-                        ) {
-
-                            const novaLista =
-                                obterAgendamentos()
-                                .map(
-                                    item =>
-
-                                        item.id ===
-                                        agendamento.id
-
-                                            ? {
-                                                ...item,
-                                                status:
-                                                    "cancelado"
-                                              }
-
-                                            : item
-                                );
-
-
-                            salvarLista(
-                                novaLista
-                            );
-
-
-                            renderMeusAgendamentos();
-
-                            renderHorarios();
-
-
-                            mostrarToast(
-                                "Agendamento cancelado."
-                            );
-
-                        }
-
-                    };
-
-
-                container.appendChild(
-                    card
-                );
-
-            }
-        );
-
-}
-
-
-/* =====================================================
-   SEGURANÇA CONTRA HTML INJETADO
-===================================================== */
-
-function escapeHtml(text) {
-
-    const elemento =
-        document.createElement(
-            "div"
-        );
-
-
-    elemento.textContent =
-        text;
-
-
-    return elemento.innerHTML;
-
-}
-
-
-/* =====================================================
-   MENSAGEM
-===================================================== */
-
-function mostrarToast(
-    mensagem
-) {
-
-    const toast =
-        $("toast");
-
-
-    toast.textContent =
-        mensagem;
-
-
-    toast.classList.add(
-        "show"
-    );
-
-
-    clearTimeout(
-        window.toastTimer
-    );
-
-
-    window.toastTimer =
-        setTimeout(
-            () => {
-
-                toast.classList.remove(
-                    "show"
-                );
-
-            },
-            2800
-        );
-
-}
-
-
-/* =====================================================
-   NAVEGAÇÃO
-===================================================== */
-
-document
-    .querySelectorAll(
-        "nav button"
-    )
-    .forEach(
-        botao => {
-
-            botao.onclick = () => {
-
-                document
-                    .querySelectorAll(
-                        "nav button"
-                    )
-                    .forEach(
-                        item =>
-                            item.classList.remove(
-                                "ativo"
-                            )
-                    );
-
-
-                botao.classList.add(
-                    "ativo"
-                );
-
-
-                [
-                    "agendar",
-                    "servicos",
-                    "horarios"
-                ]
-                .forEach(
-                    view => {
-
-                        $(
-                            "view-" +
-                            view
-                        )
-                        .classList.toggle(
-                            "hidden",
-                            botao.dataset.view !==
-                            view
-                        );
-
-                    }
-                );
-
-
-                if (
-                    botao.dataset.view ===
-                    "horarios"
-                ) {
-
-                    renderMeusAgendamentos();
-
-                }
-
-            };
-
-        }
-    );
-
-
-/* =====================================================
-   EVENTOS
-===================================================== */
-
-$("confirmar")
-    .onclick =
-        salvarAgendamento;
-
-
-$("nome")
-    .oninput =
-        atualizarResumo;
-
-
-$("telefone")
-    .oninput =
-        evento => {
-
-            evento.target.value =
-                formatarTelefone(
-                    evento.target.value
-                );
-
-
-            atualizarResumo();
-
-        };
-
-
-/* =====================================================
-   INICIALIZAÇÃO
-===================================================== */
-
-gerarDias();
-
-renderServicos();
-
-atualizarResumo();
-
-</script>
-
+                </div>
+
+                <!-- Painel Admin -->
+                <div id="adminPanel" class="hidden">
+                    <div class="title-row">
+                        <div>
+                            <span class="eyebrow">Painel administrativo</span>
+                            <h2>Olá, Carol</h2>
+                            <p class="sub">Decida as solicitações e mantenha a agenda sob controle.</p>
+                        </div>
+                        <button id="adminLogout" class="secondary">Sair</button>
+                    </div>
+
+                    <div id="stats" class="stat-grid"></div>
+
+                    <div class="admin-grid">
+                        <div>
+                            <article class="panel">
+                                <span class="eyebrow">Agenda</span>
+                                <h2>Solicitações e atendimentos</h2>
+                                <div class="admin-toolbar">
+                                    <select id="statusFilter">
+                                        <option value="all">Todos os status</option>
+                                        <option value="pendente">Pendentes</option>
+                                        <option value="aguardando-sinal">Aguardando sinal</option>
+                                        <option value="confirmado">Confirmados</option>
+                                        <option value="concluido">Concluídos</option>
+                                        <option value="recusado">Recusados</option>
+                                        <option value="cancelado">Cancelados</option>
+                                    </select>
+                                    <select id="dateFilter"></select>
+                                </div>
+                                <div id="adminAppointments"></div>
+                            </article>
+                        </div>
+
+                        <div>
+                            <article class="panel">
+                                <span class="eyebrow">Disponibilidade</span>
+                                <h2>Horários do dia</h2>
+                                <p class="sub">Clique para abrir ou bloquear um horário na data selecionada.</p>
+                                <label for="availDate">Data</label>
+                                <input id="availDate" type="date">
+                                <div id="availability" class="availability" style="margin-top:15px"></div>
+                            </article>
+
+                            <article class="panel">
+                                <span class="eyebrow">Catálogo</span>
+                                <h2>Serviços</h2>
+                                <div id="adminServices"></div>
+                                <button id="addService" class="tiny" style="margin-top:12px">+ Adicionar serviço</button>
+                            </article>
+
+                            <article class="panel">
+                                <span class="eyebrow">Relatório</span>
+                                <h2>Faturamento</h2>
+                                <p class="sub">Atendimentos concluídos: <b id="completedCount">0</b></p>
+                                <p style="font:700 31px 'Cormorant Garamond',serif;margin:3px 0" id="revenue">R$ 0,00</p>
+                            </article>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            Protótipo v2 · Nails by Nascimento · dados armazenados no Firebase
+        </footer>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast" role="status"></div>
+
+    <!-- Firebase Config -->
+    <script src="firebase-config.js"></script>
+
+    <!-- App -->
+    <script src="app.js"></script>
 </body>
 </html>

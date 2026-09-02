@@ -1,0 +1,81 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Verifica se o usuário está autenticado
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Verifica se o usuário é administrador
+    function isAdmin() {
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+    
+    // ========== SERVIÇOS ==========
+    match /servicos/{servicoId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    // ========== CLIENTES ==========
+    match /clientes/{clienteId} {
+      allow read: if isAuthenticated() && 
+                   (isAdmin() || resource.data.telefone == request.auth.token.phone_number);
+      allow create: if true;
+      allow update: if isAuthenticated() && 
+                     (isAdmin() || resource.data.telefone == request.auth.token.phone_number);
+      allow delete: if false;
+    }
+    
+    // ========== AGENDAMENTOS ==========
+    match /agendamentos/{agendamentoId} {
+      // Leitura: admin pode ler todos, cliente só os próprios
+      allow read: if isAuthenticated() && 
+                   (isAdmin() || resource.data.telefone == request.auth.token.phone_number);
+      
+      // Criação: qualquer um pode criar, mas precisa ter telefone
+      allow create: if request.resource.data.telefone != null &&
+                     request.resource.data.telefone is string &&
+                     request.resource.data.telefone.size() >= 10;
+      
+      // Atualização: apenas admin ou dono do agendamento
+      allow update: if isAuthenticated() && 
+                     (isAdmin() || resource.data.telefone == request.auth.token.phone_number);
+      
+      allow delete: if false;
+    }
+    
+    // ========== DISPONIBILIDADES ==========
+    match /disponibilidades/{disponibilidadeId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    // ========== ADMINISTRADORES ==========
+    match /admins/{adminId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Apenas configuração manual no console
+    }
+    
+    // ========== NOTIFICAÇÕES ==========
+    match /notificacoes/{notificacaoId} {
+      allow read: if isAdmin();
+      allow create: if true;
+      allow update: if false;
+      allow delete: if false;
+    }
+    
+    // ========== REAGENDAMENTOS ==========
+    match /reagendamentos/{reagendamentoId} {
+      allow read: if isAdmin() || 
+                   (isAuthenticated() && resource.data.telefone == request.auth.token.phone_number);
+      allow create: if isAuthenticated() && 
+                     (isAdmin() || resource.data.telefone == request.auth.token.phone_number);
+      allow update: if false;
+      allow delete: if false;
+    }
+  }
+}
