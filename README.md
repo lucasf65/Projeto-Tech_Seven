@@ -1,6 +1,6 @@
 # 💅 Nails by Nascimento — Sistema de Agendamento
 
-> Protótipo web e documentação desenvolvidos como parte da AAP 4 do projeto **Tech Seven**[cite: 4, 5].
+> Protótipo web e documentação desenvolvidos como parte da AAP 4 do projeto **Tech Seven**.
 
 ## 📋 Sobre o Projeto
 
