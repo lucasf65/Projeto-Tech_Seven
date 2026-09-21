@@ -22,12 +22,12 @@ A organização dos arquivos e pastas do projeto segue a seguinte estrutura:
 ├── docs/
 │   ├── 01-requisitos/    # Levantamento de requisitos do sistema
 │   ├── 02-modelagem/     # Diagramas BPMN, DER e modelo de banco de dados
-│   ├── 03-processo/      # Fluxo completo do processo (AS IS / TO BE)[cite: 5]
-│   └── 04-entrega/       # Aplicação funcional e monografia[cite: 5]
-├── index.html            # Página principal da aplicação web[cite: 4, 5]
-├── app.js                # Lógica principal e integração com Firebase[cite: 1, 5]
-├── styles.css            # Folha de estilos global[cite: 5, 6]
-├── firebase-config.js    # Configuração de conexão com o Firebase[cite: 2, 5]
+│   ├── 03-processo/      # Fluxo completo do processo (AS IS / TO BE)
+│   └── 04-entrega/       # Aplicação funcional e monografia
+├── index.html            # Página principal da aplicação web
+├── app.js                # Lógica principal e integração com Firebase
+├── styles.css            # Folha de estilos global
+├── firebase-config.js    # Configuração de conexão com o Firebase
 ├── firestore.rules       # Regras de segurança do Firestore
-├── logo.png              # Logotipo oficial da marca[cite: 4, 5]
+├── logo.png              # Logotipo oficial da marca
 └── README.md             # Documentação do projeto
