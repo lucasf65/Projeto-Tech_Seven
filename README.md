@@ -10,9 +10,9 @@ O **Nails by Nascimento** é uma aplicação web voltada para a gestão de agend
 
 Este projeto foi construído utilizando as seguintes tecnologias e ferramentas:
 
-* **Front-end:** HTML5, CSS3 e JavaScript (Vanilla)[cite: 1, 4, 6]
-* **Banco de Dados & Backend:** Firebase Firestore e Firebase Authentication[cite: 1, 2, 3]
-* **Estilização:** Google Fonts (Cormorant Garamond e Poppins) e design responsivo customizado[cite: 4, 6]
+* **Front-end:** HTML5, CSS3 e JavaScript.
+* **Banco de Dados & Backend:** Firebase Firestore e Firebase Authentication.
+* **Estilização:** Google Fonts (Cormorant Garamond e Poppins) e design responsivo customizado.
 
 ## 🗂️ Estrutura do Repositório
 
