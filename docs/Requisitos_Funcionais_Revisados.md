@@ -1,163 +1,146 @@
-# Requisitos Funcionais Revisados
+# Requisitos Funcionais 
 
 **Projeto:** Tech Seven — Sistema Web de Agendamento de Manicure  
-**Escopo:** levantamento revisado para uma aplicação web de agendamento administrada por Carol Nascimento.  
-**Status:** versão para validação; decisões de negócio ainda não confirmadas estão marcadas como **PENDÊNCIA**.
+**Status:** versão para validação e aprovação do professor e Carol; decisões de negócio ainda não confirmadas estão marcadas como **PENDÊNCIA**.
 
-## 1. Premissas e limites do escopo
+## 1. Requisitos funcionais
 
-O sistema recebe solicitações de atendimento, permite que a cliente escolha serviço, data e horário disponíveis e deixa a confirmação final sob análise de Carol. A área administrativa mantém agenda, bloqueios, serviços e histórico de clientes.
-
-O guia de assistência técnica serviu somente de referência de organização e qualidade. Recursos como cadastro de dispositivos, orçamento de reparo, logística de coleta, pagamento integrado, avaliação de assistência, aplicativo Android/iOS e painel de parceiros não se aplicam ao projeto e foram excluídos.
-
-Os requisitos descrevem comportamento observável e indicam as responsabilidades de interface, API e persistência quando isso ajuda a delimitar a implementação. Eles não fixam tecnologia ou arquitetura específica.
-
-## 2. Requisitos funcionais
-
-### 2.1 Acesso e solicitação de agendamento
+### 1.1 Acesso e solicitação de agendamento
 
 **RF01 — Acessar a página de agendamento**  
-A aplicação deve disponibilizar a página pública por URL direta, incluindo URL compartilhável pelo WhatsApp Business. O acesso não deve exigir instalação de aplicativo.
+A aplicação deve disponibilizar a página pública por URL direta, permitindo o acesso via navegadores web modernos em dispositivos móveis e desktops sem exigir a instalação de aplicativos. A URL gerada deve ser compartilhável via WhatsApp Business.
 
-**Critério de aceite:** a página abre em navegador compatível ao acessar a URL direta e a mesma URL pode ser compartilhada em uma conversa.
+**Critério de aceite:**
+• A página abre corretamente em navegadores compatíveis (Chrome, Safari, Edge) via URL direta.
+• A URL pode ser copiada e enviada em uma conversa de WhatsApp, direcionando o destinatário para a mesma página pública.
 
-**RF02 — Informar dados da cliente**  
-A aplicação deve permitir iniciar uma solicitação informando nome completo e número de WhatsApp. Deve validar campos obrigatórios e formato plausível do telefone antes de enviar à API.
+**RF02 — Cadastro de cliente**  
+A aplicação deve permitir iniciar uma solicitação de agendamento mediante o preenchimento obrigatório do nome completo e número de WhatsApp. O sistema deve validar a presença desses dados e o formato plausível do telefone (ex: quantidade de dígitos com DDD) no lado do cliente antes de disparar qualquer requisição para a API.
 
-**Critério de aceite:** sem nome ou telefone válido, a solicitação não é enviada e o campo inválido recebe mensagem compreensível.
+**Critério de aceite:**
+• Se o nome estiver vazio ou o telefone for inválido, o envio é bloqueado no navegador.
+• O campo com erro recebe um alerta visual e uma mensagem em linguagem clara e compreensível para o usuário.
 
 **RF03 — Identificar cliente existente**  
-A aplicação deve comparar o telefone informado, em formato normalizado, com os telefones associados a clientes já registrados e usar o resultado na aplicação da regra de sinal definida em RF08. A consulta e a decisão devem ocorrer no servidor.
+O servidor da aplicação deve receber o número de WhatsApp informado, aplicar uma regra de normalização (remover parênteses, espaços, traços e validar o DDD 55) e compará-lo com os telefones existentes no banco de dados. O resultado dessa busca (Cliente Novo vs. Cliente Existente) deve ser guardado na sessão/contexto para a aplicação da regra de cobrança de sinal (RF08).
 
-**Critério de aceite:** formatos equivalentes do mesmo número são tratados conforme a regra de normalização adotada; a interface não pode decidir sozinha se o sinal é devido.
+**Critério de aceite:**
+• A busca e a tomada de decisão ocorrem estritamente no servidor (API); a interface não expõe dados de outros clientes e não define sozinha se o sinal é devido.
 
-**RF04 — Consultar catálogo de serviços**  
-A aplicação deve exibir os serviços ativos com nome, descrição, preço e imagem quando houver imagem cadastrada. Serviços inativos não devem ser oferecidos para novas solicitações.
+**RF04 — Exibir catálogo de serviços**  
+A aplicação deve listar para a cliente os serviços cadastrados como ativos, exibindo nome, descrição, preço e imagem. Serviços marcados como inativos não devem ser exibidos na listagem pública.
 
-**Critério de aceite:** cada item visível corresponde aos dados ativos persistidos; ausência de imagem não impede a consulta.
+**Critério de aceite:**
+• A listagem exibe apenas registros com status ativo no banco de dados.
+• Caso aconteça alguma inconsistência e tenha ausência de imagem de um serviço, não quebra o layout da página nem impede a sua exibição ou seleção.
 
-**RF05 — Selecionar serviço ou procedimento**  
-A cliente deve poder selecionar um serviço ativo para a solicitação. A API deve validar que o serviço ainda está ativo no momento do envio.
+**RF05 — Selecionar serviço**  
+A aplicação deve permitir que a cliente selecione um serviço ativo. No momento do envio do formulário de agendamento, a API deve revalidar no banco de dados se o serviço selecionado permanece com o status ativo.
 
-**Critério de aceite:** uma solicitação com serviço inexistente ou inativo é recusada com erro compreensível e não é persistida como válida.
+**Critério de aceite:**
+• Caso o serviço tenha sido desativado ou excluído pela administradora durante a sessão da cliente, a API recusa a gravação, bloqueia a persistência e retorna um erro compreensível na tela.
 
 **RF06 — Consultar datas disponíveis**  
-Após a seleção do serviço, a aplicação deve apresentar datas com pelo menos um horário disponível, considerando agenda, bloqueios e duração do serviço quando essa duração estiver definida.
+Após a seleção do serviço, a aplicação deve exibir um calendário destacando as datas que possuem pelo menos um horário vago. Essa consulta deve cruzar os dados da agenda geral, os bloqueios automáticos e manuais inseridos pela administradora e a duração estimada do serviço.
 
-**Critério de aceite:** datas sem horário elegível não são oferecidas; a API é a fonte final de disponibilidade.
-
-**PENDÊNCIA RF06:** confirmar horário de funcionamento, antecedência mínima/máxima para agendar, duração de cada serviço e fuso horário oficial.
+**PENDÊNCIA RF06:** confirmar horário de funcionamento e duração de cada serviço.
 
 **RF07 — Consultar e solicitar horário**  
-A cliente deve poder consultar os horários disponíveis para uma data e enviar uma solicitação para um horário livre. A API deve revalidar disponibilidade de forma atômica no envio para evitar duas solicitações ocuparem a mesma vaga. A solicitação deve ser registrada como pendente, sem confirmar o atendimento automaticamente.
+A aplicação deve exibir os horários disponíveis para a data selecionada. Ao clicar em enviar, a API deve realizar uma operação atômica de validação e reserva: se o horário ainda estiver livre, registra a solicitação com o estado "Pendente".
 
-**Critério de aceite:** em tentativas concorrentes para a mesma vaga, no máximo uma obtém a reserva; as demais recebem indicação de indisponibilidade e não criam solicitação pendente para aquela vaga.
+**Critério de aceite:**
+• Em caso de cliques simultâneos de clientes diferentes para a mesma vaga, apenas a primeira requisição processada pelo servidor garante o horário.
+• As requisições concorrentes recebem um aviso imediato de indisponibilidade e nenhuma solicitação duplicada é criada.
 
-**PENDÊNCIA RF07:** o documento anterior propõe reserva temporária por 15 minutos para solicitações pendentes. Confirmar prazo e regra de expiração com Carol antes de implementar. Enquanto isso, o prazo não é requisito fechado.
+**PENDÊNCIA RF07:** Reserva temporária por 15 minutos durante o processo de comprovação do pagamento via PIX, para solicitações pendentes. Confirmar prazo e regra de expiração com Carol antes da implementação. 
 
 ### 2.2 Sinal e confirmação
 
 **RF08 — Aplicar regra de sinal**  
-O sistema deve identificar se a cliente é nova ou existente e calcular o sinal conforme a regra de negócio confirmada. Os valores e a condição devem ser mantidos no servidor e associados à solicitação para consulta administrativa.
+O sistema deve aplicar uma cobrança fixa de R$ 30,00 a título de sinal apenas para clientes classificadas como "Cliente Nova" (RF03). Após a seleção do agendamento, o sistema deve exibir os dados de pagamento (Chave Pix ou QR Code) e fornecer um campo obrigatório para o upload do arquivo de comprovante.
 
-**PENDÊNCIA RF08:** os documentos anteriores propõem sinal de R$ 30,00 apenas para cliente nova. Confirmar valor, definição de “cliente nova”, exceções e se a regra se aplica a todos os serviços. Não presumir cobrança ou integração de pagamento.
+**Critério de aceite:**
+	• O agendamento de uma cliente nova não pode ser salvo no estado "Pendente" sem um arquivo de imagem/PDF associado ao campo de comprovante.
+	• O valor gerado R$ 30,00 fica gravado de forma imutável junto ao registro do cliente e agendamento solicitado. Transformando em "Cliente Existente" (RF03).
 
 **RF09 — Registrar situação do sinal**  
-A área administrativa deve permitir consultar e registrar a situação do sinal associada ao agendamento. O registro deve incluir situação, valor aplicável e data/hora da alteração; quando aplicável, registrar o responsável.
+A área administrativa deve permitir consultar o comprovante enviado e registrar manualmente a situação do sinal associada ao agendamento (Pendente, Confirmado ou Recusado), verificando no extrato bancário do(a) estabelecimento/administração. Cada mudança deve registrar a data/hora e o responsável logado.
 
-**Critério de aceite:** a administradora consegue distinguir sinal não aplicável, pendente e confirmado, caso esses estados sejam aprovados na regra de negócio; cada mudança fica associada ao agendamento.
-
-**PENDÊNCIA RF09:** aprovar lista de estados e definir como Carol confirmará o recebimento (registro manual ou integração externa). Pagamento dentro do site não está confirmado.
+**Critério de aceite:**
+	• A administradora consegue visualizar a imagem/PDF do comprovante anexo diretamente no painel de gestão de agendamentos antes de alterar o estado do sinal.
 
 **RF10 — Consultar solicitações pendentes**  
-A área administrativa deve listar solicitações aguardando análise e apresentar, no mínimo, cliente, telefone, serviço, data, horário, estado e situação do sinal, quando aplicável.
+A área administrativa deve listar solicitações aguardando análise e apresentar, no mínimo: cliente, telefone, serviço, data, horário, status do agendamento e visualização de comprovante.
 
-**Critério de aceite:** uma solicitação enviada aparece na lista pendente com os dados persistidos correspondentes.
+**Critério de aceite:**
+	• Uma solicitação finalizada pela cliente aparece em tempo real nesta listagem com os dados correspondentes.
 
 **RF11 — Aprovar ou recusar solicitação**  
-A administradora deve poder aprovar ou recusar uma solicitação pendente. Antes de aprovar, o servidor deve validar novamente a disponibilidade. Uma solicitação recusada não deve ocupar a vaga.
+A administradora deve poder aprovar ou recusar uma solicitação pendente. Antes de efetivar a aprovação, o servidor deve validar novamente se o horário não sofreu bloqueios. Uma solicitação recusada libera a vaga imediatamente para o calendário.
 
-**Critério de aceite:** somente solicitação pendente pode ser aprovada ou recusada; aprovação concorrente não cria sobreposição; recusa registra estado e libera a vaga.
+**Critério de aceite:**
+	• Somente solicitações no estado "Pendente" podem ser alteradas por este comando.
 
 **RF12 — Consultar e gerenciar agenda**  
-A administradora deve consultar agendamentos por data e visualizar a ocupação da agenda, distinguindo solicitações pendentes de atendimentos confirmados e demais estados definidos.
+A administradora deve consultar agendamentos por data através de uma visualização unificada (grade ou calendário), permitindo diferenciar visualmente os horários vagos, os bloqueados, as solicitações pendentes e os atendimentos confirmados.
 
-**Critério de aceite:** a visualização reflete os dados persistidos e permite identificar horário, serviço, cliente e estado de cada item.
+**Critério de aceite:**
+	• A interface reflete os dados reais persistidos e permite identificar horário, serviço, cliente e estado de cada item.
 
 **RF13 — Bloquear e liberar datas ou horários**  
-A administradora deve poder bloquear e liberar datas ou intervalos de horário. O sistema não deve oferecer bloqueios para novas solicitações. Bloqueios incompatíveis com agendamentos existentes devem ser sinalizados antes da gravação.
+A administradora deve poder criar bloqueios manuais de horários ou intervalos de dias. O sistema deve emitir um alerta visual listando conflitos existentes caso o período selecionado possua agendamentos confirmados ou pendentes antes de efetivar a gravação.
 
-**Critério de aceite:** bloqueio salvo deixa de aparecer como disponível; tentativa de bloquear período ocupado é informada e não altera silenciosamente um agendamento.
+**Critério de aceite:**
+	• O bloqueio salvo remove os horários da visão do cliente.
+	• O sistema não cancela ou altera agendamentos existentes de forma silenciosa.
 
 **RF14 — Manter estados do agendamento**  
-O sistema deve persistir e exibir, no mínimo, os estados pendente, confirmado, recusado, cancelado e expirado. As transições devem ser validadas no servidor e cada alteração deve manter data/hora e responsável quando realizada por pessoa autenticada.
+O sistema deve gerenciar e persistir o ciclo de vida de um agendamento através dos estados: Pendente, Confirmado e Cancelado. O servidor deve validar e impedir transições inválidas na API.
 
-**Critério de aceite:** estados fora das transições permitidas são rejeitados; uma solicitação expirada ou recusada não pode ser confirmada sem nova regra explícita.
-
-**PENDÊNCIA RF14:** confirmar se “expirado” será usado e como se relaciona à eventual reserva temporária de RF07.
+**Critério de aceite:**
+	• Transições fora das regras permitidas pela máquina de estados são rejeitadas com erro controlado pelo servidor.
 
 ### 2.3 Pós-agendamento e manutenção
 
-**RF15 — Solicitar cancelamento**  
-A cliente deve poder solicitar cancelamento de um agendamento confirmado. O sistema deve registrar a solicitação e a administradora deve poder decidir ou efetivar o cancelamento conforme a política aprovada.
+**RF15 — Solicitar cancelamento autônomo**  
+A cliente deve poder realizar o cancelamento de um agendamento de forma autônoma diretamente pelo site, sem depender de aprovação manual, desde que respeitada a janela de tempo permitida. O sistema deve liberar a vaga no calendário instantaneamente e atualizar a situação do sinal para "Reembolso Pendente" se houver taxa de R$ 30,00 associada.
 
-**PENDÊNCIA RF15:** definir se cancelamento é automático ou depende de aprovação, prazo limite, efeitos sobre sinal e canal de identificação da cliente. Os documentos anteriores citam regras, mas não as especificam.
+**Critério de aceite:**
+	• O cancelamento autônomo dispara uma flag visual na área administrativa para sinalizar à Carol que o reembolso daquele sinal precisa ser processado manualmente.
+  
+**PENDÊNCIA RF15:** Confirmar a janela de tempo permitida para cancelamento feito pelo cliente.
 
 **RF16 — Solicitar reagendamento**  
-A cliente deve poder solicitar outra data ou horário para um agendamento elegível. O sistema deve validar disponibilidade e permitir à administradora aprovar ou recusar a mudança. O horário original permanece associado ao agendamento até a alteração ser aceita.
+A cliente deve poder enviar uma solicitação de mudança de data/horário para um agendamento elegível. A API deve validar a disponibilidade da nova vaga.
 
-**Critério de aceite:** recusa mantém data e horário originais; aprovação revalida e grava a nova vaga sem duplicidade.
+**Critério de aceite:**
+	• A aprovação grava a nova vaga e libera a antiga simultaneamente.
 
 **RF17 — Controlar limite de reagendamentos**  
-O sistema deve contabilizar reagendamentos aceitos por agendamento e bloquear solicitações adicionais ao atingir o limite configurado.
+O sistema deve contabilizar os reagendamentos aceitos e bem-sucedidos por atendimento e bloquear novas solicitações adicionais na interface e na API ao atingir o limite estrito de 3 trocas.
 
-**PENDÊNCIA RF17:** o limite de três consta nos documentos do projeto, mas precisa de confirmação de Carol. Confirmar também se solicitações recusadas contam (proposta: não) e se o limite é configurável.
+**Critério de aceite:**
+	• A tentativa de submeter uma 4ª alteração de horário para o mesmo agendamento é bloqueada.
 
-**RF18 — Gerenciar serviços e pacotes**  
-A administradora deve cadastrar, consultar, editar, ativar, desativar e excluir serviços e pacotes com nome, descrição, preço e imagem opcional. A exclusão não deve apagar referências históricas de agendamentos já registrados; quando houver referência, deve-se impedir exclusão física e permitir desativação.
+**RF18 — Gerenciar serviços**  
+A área administrativa deve permitir cadastrar, consultar, editar e desativar serviços avulsos (com nome, descrição, preço e imagem). Caso um serviço possua histórico de agendamentos associado, o sistema impede a sua exclusão física do banco de dados, permitindo apenas a sua desativação lógica (arquivamento).
 
-**Critério de aceite:** alterações passam a valer para novas consultas; dados históricos mantêm o serviço e preço associados no momento do agendamento.
-
-**PENDÊNCIA RF18:** confirmar se pacotes fazem parte do escopo inicial. Duração, preço promocional e composição de pacote também dependem de definição.
+**Critério de aceite:**
+	• Alterações de preços ou nomes não modificam retroativamente os dados gravados nos agendamentos passados (integridade de histórico).
 
 **RF19 — Consultar histórico de clientes**  
-A administradora deve consultar clientes e seus atendimentos anteriores, incluindo data, serviço e estado do agendamento. O acesso deve ocorrer somente pela área autenticada.
+A administradora deve consultar clientes e seus atendimentos anteriores (data, serviço, valor cobrado e estados). O acesso deve ocorrer somente pela área autenticada.
 
-**Critério de aceite:** o histórico apresenta somente registros associados ao cliente selecionado e não fica acessível pela página pública.
+**Critério de aceite:**
+	• O histórico de atendimentos de uma cliente não pode ser acessado de nenhuma forma pela rota pública do sistema.
 
 **RF20 — Registrar alterações administrativas**  
-O sistema deve registrar alterações relevantes de agendamento e sinal, incluindo ação, data/hora e usuário responsável quando a ação for administrativa. Esse registro deve ser consultável por Carol para esclarecer o histórico.
-
-**Critério de aceite:** aprovação, recusa, cancelamento, reagendamento e alteração da situação do sinal deixam registro associado ao item alterado.
+O sistema deve gerar logs de auditoria imutáveis para ações de alteração de sinal, aprovação, recusa, cancelamento manual e bloqueio de agenda, contendo: ação, data/hora e o ID da conta administrativa responsável.
 
 ### 2.4 Notificações
 
 **RF21 — Enviar lembrete de atendimento**  
-O sistema deve enviar lembrete à cliente pelo WhatsApp antes de atendimento confirmado, caso haja integração e autorização operacional. Falhas de envio não podem alterar o estado do agendamento.
+Se a integração estiver ativa, o sistema deve disparar notificações automáticas de lembrete via WhatsApp para a cliente com 1 dia de antecedência do atendimento confirmado. Falhas de comunicação na API de terceiros não podem alterar ou corromper o estado do agendamento no sistema principal.
 
-**PENDÊNCIA RF21:** confirmar provedor/API do WhatsApp, consentimento e modelo de mensagem, antecedência (a proposta anterior é entre 1 e 2 dias), política de tentativas e custos. Sem essas decisões, lembrete automático é requisito condicionado, não funcionalidade garantida.
-
-## 3. Regras de consistência e persistência
-
-- O servidor deve ser a autoridade para validar disponibilidade, estado, regra de sinal e limite de reagendamento.
-- Solicitações, serviços, bloqueios, estados, dados de cliente e alterações administrativas devem ser persistidos; recarregar a página não pode apagar registros válidos.
-- Cada agendamento deve manter referências ao cliente e serviço, além de uma cópia do preço aplicável no momento da solicitação, para preservar o histórico após alterações no catálogo.
-- A gravação de reserva/aprovação deve proteger a agenda contra concorrência. A estratégia de banco de dados é decisão de implementação, mas deve satisfazer os critérios de RF07, RF11 e RNF04.
-- A interface web deve apresentar erros de validação e de disponibilidade sem expor detalhes internos da API ou do banco.
-
-## 4. Decisões pendentes para validação com Carol
-
-1. Horário de funcionamento, duração dos serviços, fuso, antecedência e horizonte de agendamento.
-2. Reserva de horário pendente e eventual prazo de 15 minutos.
-3. Regra do sinal de R$ 30,00, elegibilidade, exceções e confirmação do recebimento.
-4. Fluxo e política de cancelamento.
-5. Limite de três reagendamentos e critérios de contagem.
-6. Inclusão de pacotes no escopo inicial.
-7. WhatsApp: integração, consentimento, antecedência e política de reenvio.
-8. Método de autenticação da administradora e necessidade futura de outros operadores.
-9. Regras de retenção, correção e eventual exclusão de dados pessoais.
-
-## 5. Rastreabilidade
-
-Os requisitos funcionais foram consolidados a partir dos documentos próprios do Tech Seven sobre agendamento de manicure e do levantamento de requisitos do projeto. Os guias de assistência técnica foram usados apenas como referência de organização; suas funções específicas não foram transplantadas.
-
+**Critério de aceite:**
+	• Erros no envio do WhatsApp mantêm o agendamento intacto como "Confirmado" e registram a falha em log de sistema.
