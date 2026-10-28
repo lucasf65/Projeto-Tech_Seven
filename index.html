@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nails by Nascimento — Estúdio de Manicure & Nail Design</title>
+<meta name="description" content="Estúdio de manicure e nail design com atendimento personalizado. Agende seu horário on-line, sem precisar criar uma senha.">
+<link rel="icon" href="assets/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,500;1,700&family=Poppins:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+    <!-- Tela de Transição -->
+<div id="page-transition">
+  <img src="assets/logo.png" alt="Carregando..." onerror="this.style.display='none'">
+  <span>Nails by Nascimento</span>
+</div>
+
+<!-- ==================== HEADER ==================== -->
+<header class="site-header">
+  <div class="container nav-wrap">
+    <a class="brand" href="index.html">
+      <img src="assets/logo.png" alt="" onerror="this.style.display='none'">
+      <div class="brand-meta"><strong>Carol Nascimento</strong><span>Nails · Estúdio</span></div>
+    </a>
+    <button class="nav-toggle" aria-label="Abrir menu" aria-expanded="false"><span></span></button>
+    <nav class="nav-links" aria-label="Principal">
+      <a href="index.html" aria-current="page">Início</a>
+      <a href="servicos.html">Serviços</a>
+      <a href="precos.html">Preços</a>
+      <a href="galeria.html">Galeria</a>
+      <a href="sobre.html">Sobre</a>
+      <a href="meus-horarios.html">Meus horários</a>
+    </nav>
+    <div class="nav-cta"><a class="btn btn-primary" href="agendamento.html">Agendar horário <span class="arrow">→</span></a></div>
+  </div>
+</header>
+
+<!-- ==================== HERO ==================== -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-copy reveal">
+      <span class="eyebrow">Estúdio de unhas · Desde 2024</span>
+      <h1>Beleza que se<br><em>revela nos detalhes.</em></h1>
+      <p class="lead">Alongamento, esmaltação em gel e cuidados completos para as mãos e os pés. Um atendimento acolhedor, no seu ritmo, com hora marcada e sem pressa.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="agendamento.html">Agendar horário <span class="arrow">→</span></a>
+        <a class="btn btn-ghost" href="servicos.html">Ver serviços</a>
+      </div>
+    </div>
+    <div class="hero-visual reveal">
+      <img src="assets/hero.jpg" alt="Trabalho de manicure do estúdio" onerror="this.parentNode.style.background='var(--soft)'">
+      <div class="hero-badge"><b>4.9★</b><span>avaliação das clientes</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== MARQUEE ==================== -->
+<div class="marquee" aria-hidden="true">
+  <div class="marquee-track">
+    <span>Alongamento em gel</span><span>Esmaltação</span><span>Blindagem</span><span>Nail art</span><span>Manicure</span><span>Pedicure</span>
+    <span>Alongamento em gel</span><span>Esmaltação</span><span>Blindagem</span><span>Nail art</span><span>Manicure</span><span>Pedicure</span>
+  </div>
+</div>
+
+<!-- ==================== PILARES ==================== -->
+<section class="section-tight">
+  <div class="container">
+    <div class="grid grid-3">
+      <div class="reveal">
+        <span class="eyebrow">01 · Ambiente</span>
+        <h3 style="margin:10px 0 8px">Um momento só seu</h3>
+        <p class="lead" style="font-size:14px">Um atendimento reservado, sem filas nem pressa. Um momento dedicado inteiramente a você.</p>
+      </div>
+      <div class="reveal">
+        <span class="eyebrow">02 · Produtos</span>
+        <h3 style="margin:10px 0 8px">Produtos de alta qualidade</h3>
+        <p class="lead" style="font-size:14px">Géis e esmaltes selecionados para oferecer maior durabilidade e um acabamento impecável.</p>
+      </div>
+      <div class="reveal">
+        <span class="eyebrow">03 · Técnica</span>
+        <h3 style="margin:10px 0 8px">Formação contínua</h3>
+        <p class="lead" style="font-size:14px">Aprimoramento constante e atenção a cada detalhe, da cutícula ao brilho final.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== SERVIÇOS ==================== -->
+<section class="section section-alt">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <span class="eyebrow">Destaques</span>
+        <h2>Serviços mais procurados</h2>
+        <p class="lead">Os serviços mais procurados do estúdio, com acabamento impecável e produtos de alta qualidade.</p>
+      </div>
+      <a class="btn btn-ghost" href="servicos.html">Ver todos <span class="arrow">→</span></a>
+    </div>
+    <div class="grid grid-3" id="featuredServices" aria-busy="true"></div>
+  </div>
+</section>
+
+<!-- ==================== GALERIA ==================== -->
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <span class="eyebrow">Galeria</span>
+        <h2>Trabalhos recentes</h2>
+        <p class="lead">Confira alguns dos trabalhos que Carol realiza a cada semana.</p>
+      </div>
+      <a class="btn btn-ghost" href="galeria.html">Ver galeria completa <span class="arrow">→</span></a>
+    </div>
+    <div class="gallery" id="homeGallery"></div>
+  </div>
+</section>
+
+<!-- ==================== COMO FUNCIONA ==================== -->
+<section class="section section-alt">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <span class="eyebrow">Passo a passo</span>
+        <h2>Como funciona o agendamento</h2>
+        <p class="lead">É simples e não exige cadastro. Carol confirma a solicitação pelo WhatsApp.</p>
+      </div>
+    </div>
+    <div class="grid grid-3">
+      <article class="card reveal">
+        <div class="icon">1</div>
+        <h3>Escolha o serviço</h3>
+        <p class="lead" style="font-size:13.5px">Confira os procedimentos disponíveis e o preço de cada serviço.</p>
+      </article>
+      <article class="card reveal">
+        <div class="icon">2</div>
+        <h3>Selecione data e horário</h3>
+        <p class="lead" style="font-size:13.5px">Serão exibidos apenas os horários disponíveis na agenda.</p>
+      </article>
+      <article class="card reveal">
+        <div class="icon">3</div>
+        <h3>Envie a solicitação e pague o sinal</h3>
+        <p class="lead" style="font-size:13.5px">O pagamento de um sinal de R$ 30 via PIX reserva seu horário até a confirmação do agendamento.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== CTA FINAL ==================== -->
+<section class="section section-dark">
+  <div class="container" style="text-align:center;max-width:820px">
+    <span class="eyebrow" style="justify-content:center">Vamos começar?</span>
+    <h2 style="margin:16px 0 16px">Escolha seu horário em menos de um minuto</h2>
+    <p class="lead" style="margin:0 auto 32px">Não é necessário fazer cadastro nem criar uma senha. Carol confirmará sua solicitação pelo WhatsApp.</p>
+    <a class="btn btn-gold" href="agendamento.html">Solicitar agendamento <span class="arrow">→</span></a>
+  </div>
+</section>
+
+<!-- ==================== DEPOIMENTOS ==================== -->
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <span class="eyebrow">Depoimentos</span>
+        <h2>O que as clientes dizem</h2>
+      </div>
+    </div>
+    <div class="grid grid-3">
+      <article class="card reveal">
+        <p style="font-family:var(--font-display);font-size:20px;line-height:1.4;color:var(--ink);margin:0 0 16px">“Saio de lá com a sensação de ter cuidado de mim. Carol é atenciosa, caprichosa e o ambiente é maravilhoso.”</p>
+        <small style="color:var(--muted);font-size:12px;letter-spacing:.06em;text-transform:uppercase;font-weight:700">— Marina S.</small>
+      </article>
+      <article class="card reveal">
+        <p style="font-family:var(--font-display);font-size:20px;line-height:1.4;color:var(--ink);margin:0 0 16px">“Meu alongamento ficou impecável por semanas. Já me tornei cliente fiel e indiquei o trabalho para todo mundo.”</p>
+        <small style="color:var(--muted);font-size:12px;letter-spacing:.06em;text-transform:uppercase;font-weight:700">— Letícia F.</small>
+      </article>
+      <article class="card reveal">
+        <p style="font-family:var(--font-display);font-size:20px;line-height:1.4;color:var(--ink);margin:0 0 16px">“Agendei pelo site em um minuto e recebi a confirmação pelo WhatsApp. Tudo muito prático e sem complicação.”</p>
+        <small style="color:var(--muted);font-size:12px;letter-spacing:.06em;text-transform:uppercase;font-weight:700">— Camila R.</small>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== FOOTER ==================== -->
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div>
+      <div class="footer-brand">Nails by Nascimento<small>Manicure & Nail Design</small></div>
+      <p style="margin-top:16px">Estúdio de manicure com atendimento personalizado e hora marcada. Um cuidado especial para as suas mãos.</p>
+    </div>
+    <div>
+      <h4>Navegar</h4>
+      <p><a href="servicos.html">Serviços</a></p>
+      <p><a href="precos.html">Preços</a></p>
+      <p><a href="sobre.html">Sobre</a></p>
+      <p><a href="galeria.html">Galeria</a></p>
+    </div>
+    <div>
+      <h4>Cliente</h4>
+      <p><a href="agendamento.html">Agendar horário horário</a></p>
+      <p><a href="meus-horarios.html">Meus horários</a></p>
+      <p><a id="waLink" href="#" target="_blank" rel="noopener">WhatsApp</a></p>
+    </div>
+    <div>
+      <h4>Estúdio</h4>
+      <p>Atendimento com hora marcada</p>
+      <p>Segunda a sábado · das 9h às 19h</p>
+      <p><a href="admin.html">Área da Carol</a></p>
+    </div>
+  </div>
+  <div class="container footer-bottom">
+    <span>© <span id="year"></span> Nails by Nascimento</span>
+    <span>Feito com carinho</span>
+  </div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/app-core.js"></script>
+<script src="js/site.js"></script>
+</body>
+</html>
