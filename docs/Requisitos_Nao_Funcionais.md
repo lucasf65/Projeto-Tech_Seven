@@ -102,6 +102,6 @@ Falhas de envio de lembretes pelo WhatsApp ou quedas na API do fornecedor de men
 
 Alterações no esquema da base de dados devem ser estritamente versionadas por arquivos de migração (database migrations) e reproduzíveis em ambiente limpo, sem depender de edições manuais em registros de produção.
 
-### RNF21 — Armazenamento seguro de uploads (Adicionado)
+### RNF21 — Armazenamento seguro de uploads 
 
 Os arquivos de comprovante Pix enviados pelas clientes novas devem ser salvos em um repositório de objetos privado (ex: AWS S3). O servidor da API deve validar os arquivos recebidos aceitando estritamente os formatos .jpg, .jpeg, .png e .pdf, aplicando um limite máximo de tamanho de 5MB por arquivo para mitigar ataques de negação de serviço (DoS).
