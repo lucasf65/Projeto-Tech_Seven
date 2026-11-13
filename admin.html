@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Área da Carol — Nails by Nascimento</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="assets/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<!-- Tela de Transição -->
+<div id="page-transition">
+  <img src="assets/logo.png" alt="Carregando..." onerror="this.style.display='none'">
+  <span>Nails by Nascimento</span>
+</div>
+
+<header class="site-header">
+  <div class="container nav-wrap">
+    <a class="brand" href="index.html"><img src="assets/logo.png" alt="" onerror="this.style.display='none'"><div class="brand-meta"><strong>Carol Nascimento</strong><span>Nails · Estúdio</span></div></a>
+    <button class="nav-toggle" aria-label="Abrir menu" aria-expanded="false"><span></span></button>
+    <nav class="nav-links" aria-label="Principal">
+      <a href="index.html">Início</a>
+      <a href="servicos.html">Serviços</a>
+      <a href="precos.html">Preços</a>
+      <a href="galeria.html">Galeria</a>
+      <a href="sobre.html">Sobre</a>
+      <a href="meus-horarios.html">Meus horários</a>
+    </nav>
+    <div class="nav-cta"><a class="btn btn-primary" href="agendamento.html">Agendar horário <span class="arrow">→</span></a></div>
+  </div>
+</header>
+
+<main class="section">
+  <div class="container">
+    <!-- Login -->
+    <div id="adminLogin" class="card admin-login-wrap">
+      <span class="eyebrow">Área administrativa</span>
+      <h2>Login da Carol</h2>
+      <p class="lead" style="font-size:13px">Entre usando suas credenciais do Firebase.</p>
+      <div class="field" style="margin-top:22px"><label for="adminEmail">E-mail</label><input id="adminEmail" type="email" placeholder="seu-email@exemplo.com"></div>
+      <div class="field"><label for="adminPassword">Senha</label><input id="adminPassword" type="password" placeholder="••••••••"></div>
+      <button id="adminLoginBtn" class="btn btn-primary btn-block mt-4">Acessar o painel</button>
+    </div>
+
+    <!-- Painel -->
+    <div id="adminPanel" class="hidden">
+      <div class="section-head" style="margin-bottom:26px">
+        <div>
+          <span class="eyebrow">Painel</span>
+          <h1 style="font-size:clamp(32px,4.4vw,52px);margin-top:12px">Olá, Carol</h1>
+          <p class="lead" style="margin-top:8px">Gerencie os agendamentos, a agenda e os serviços cadastrados.</p>
+        </div>
+        <button id="adminLogout" class="btn btn-ghost">Sair</button>
+      </div>
+      
+      <div id="stats" class="stat-grid"></div>
+      
+      <div class="admin-grid-advanced">
+        <!-- Coluna Esquerda: Agenda -->
+        <div>
+          <article class="card">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px;">
+              <div>
+                <span class="eyebrow">Agenda</span>
+                <h2 style="font-size:28px;margin-top:6px">Solicitações</h2>
+              </div>
+              <div class="admin-toolbar" style="margin:0;">
+                <select id="statusFilter">
+                  <option value="all">Todos os status</option>
+                  <option value="pendente">Pendentes</option>
+                  <option value="aguardando-sinal">Aguardando sinal</option>
+                  <option value="confirmado">Confirmados</option>
+                  <option value="concluido">Concluídos</option>
+                  <option value="recusado">Recusados</option>
+                  <option value="cancelado">Cancelados</option>
+                </select>
+                <select id="dateFilter"></select>
+              </div>
+            </div>
+            <div id="adminAppointments" style="margin-top:16px;"></div>
+          </article>
+        </div>
+
+        <!-- Coluna Direita: Ferramentas -->
+        <div>
+          <!-- Disponibilidade -->
+          <article class="card">
+            <span class="eyebrow">Disponibilidade</span>
+            <h2 style="font-size:24px;margin-top:6px">Gerenciar agenda</h2>
+            <p class="lead" style="font-size:13px;margin-top:6px">Abra o painel para selecionar uma data e bloquear horários.</p>
+            
+            <button id="openAgendaModal" class="btn btn-primary btn-block mt-4">Abrir agenda</button>
+          </article>
+          
+          <!-- Catálogo -->
+          <article class="card mt-6">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+              <div>
+                <span class="eyebrow">Catálogo</span>
+                <h2 style="font-size:24px;margin-top:6px">Serviços</h2>
+              </div>
+              <button id="openServiceModal" class="tiny go">+ Novo</button>
+            </div>
+            <div id="adminServices"></div>
+          </article>
+
+          <!-- Galeria -->
+          <article class="card mt-6">
+            <span class="eyebrow">Galeria</span>
+            <h2 style="font-size:24px;margin-top:6px">Fotos</h2>
+            <p class="lead" style="font-size:12px;margin-top:6px">Insira o endereço público da imagem e uma descrição.</p>
+            <div class="field mt-4"><input id="galUrl" placeholder="https://..."></div>
+            <div class="field"><input id="galAlt" placeholder="Descrição (ex.: alongamento em gel)"></div>
+            <button id="addGal" class="tiny mt-4">+ Adicionar foto</button>
+            <div id="adminGaleria" class="mt-4"></div>
+          </article>
+          
+          <!-- Relatório -->
+          <article class="card mt-6">
+            <span class="eyebrow">Relatório</span>
+            <h2 style="font-size:24px;margin-top:6px">Faturamento</h2>
+            <p class="lead" style="font-size:12px;margin-top:6px">Atendimentos concluídos: <b id="completedCount">0</b></p>
+            <p style="font-family:var(--font-display);font-size:36px;font-weight:600;margin:8px 0;color:var(--brand)" id="revenue">R$ 0,00</p>
+          </article>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ================= MODAL DE AGENDA PREMIUM ================= -->
+<div id="agendaModal" class="modal-agenda-overlay">
+  <div class="modal-agenda-content">
+    
+    <!-- Cabeçalho do Modal -->
+    <div class="modal-header-custom">
+      <div>
+        <span class="eyebrow">Gestão</span>
+        <h2 style="font-size: 32px; margin-top: 4px; font-family: var(--font-display); font-weight: 600;">Horários do dia</h2>
+      </div>
+      <button type="button" class="close-modal-custom" id="closeAgendaModal">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+
+    <div class="modal-agenda-body">
+      <!-- Bloco do Calendário -->
+      <div class="modal-calendar-box">
+        <div class="custom-calendar" style="padding: 0; border: none; box-shadow: none;">
+          <div class="cal-header" style="margin-bottom: 20px;">
+            <button type="button" id="adminPrevMonth" class="cal-nav-btn">&#8249;</button>
+            <div class="cal-title" style="font-family: var(--font-body); font-size: 15px; font-weight: 600;">
+              <span id="adminCalMonth"></span>
+              <span id="adminCalYear" style="margin-left: 6px;"></span>
+            </div>
+            <button type="button" id="adminNextMonth" class="cal-nav-btn">&#8250;</button>
+          </div>
+          <div class="cal-weekdays" style="margin-bottom: 10px;">
+            <span>D</span><span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span>
+          </div>
+          <div class="cal-grid" id="adminCalendarGrid"></div>
+        </div>
+      </div>
+
+      <!-- Bloco dos Horários -->
+      <div class="modal-slots-box">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <h4 style="font-family: var(--font-body); font-size: 13px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin: 0;">Horários</h4>
+          <span id="modalSelectedDate" style="font-family: var(--font-body); font-size: 13px; font-weight: 600; color: var(--ink);"></span>
+        </div>
+        
+        <div id="modalAvailability" class="slots-grid"></div>
+        
+        <div class="legend">
+          <div class="legend-item"><span class="dot avail"></span> Disponível</div>
+          <div class="legend-item"><span class="dot locked"></span> Bloqueado</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Botão de Fechar Footer -->
+    <div class="modal-footer-custom">
+      <button class="btn btn-primary btn-block" id="doneAgendaModal">Concluir</button>
+    </div>
+    
+    <!-- Input oculto para guardar a data selecionada -->
+    <input type="hidden" id="availDate">
+  </div>
+</div>
+
+<!-- Modal de Novo Serviço -->
+<div id="serviceModal" class="modal-overlay">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Novo Serviço</h3>
+      <button type="button" class="close-modal">&times;</button>
+    </div>
+    
+    <div class="field">
+      <label>Nome do serviço</label>
+      <input id="newServiceName" placeholder="Ex: Blindagem em gel" autocomplete="off">
+    </div>
+    
+    <div class="field">
+      <label>Descrição breve</label>
+      <input id="newServiceDesc" placeholder="Ex: Proteção e brilho para unhas naturais" autocomplete="off">
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Duração</label>
+        <div style="display: flex; gap: 6px;">
+          <input id="newServiceHours" type="number" min="0" max="12" placeholder="H" style="text-align: center; padding: 12px 0;">
+          <input id="newServiceMins" type="number" min="0" max="59" placeholder="Min" style="text-align: center; padding: 12px 0;">
+          <select id="newServiceFormat" style="padding: 12px 8px; width: auto;">
+            <option value="min">min</option>
+            <option value="h">h</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="field">
+        <label>Preço (R$)</label>
+        <input id="newServicePrice" type="number" min="0" placeholder="Ex: 90">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Ícone / Emoji</label>
+      <div class="emoji-picker-container">
+        <button type="button" id="emojiBtn" class="emoji-trigger">
+          <span id="selectedEmoji">💅</span> <span style="font-size:12px; margin-left:8px; color:var(--muted)">Escolher um ícone</span>
+        </button>
+        <div id="emojiDropdown" class="emoji-dropdown hidden">
+          <span class="emoji-option">💅</span>
+          <span class="emoji-option">✨</span>
+          <span class="emoji-option">🌸</span>
+          <span class="emoji-option">💎</span>
+          <span class="emoji-option">🎨</span>
+          <span class="emoji-option">💖</span>
+          <span class="emoji-option">🦋</span>
+          <span class="emoji-option">🌿</span>
+        </div>
+      </div>
+    </div>
+
+    <button id="saveNewService" class="btn btn-primary btn-block mt-4">Salvar Serviço</button>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div><div class="footer-brand">Nails by Nascimento<small>Manicure & Nail Design</small></div><p style="margin-top:16px">Estúdio de manicure com atendimento personalizado e hora marcada.</p></div>
+    <div><h4>Navegar</h4><p><a href="servicos.html">Serviços</a></p><p><a href="precos.html">Preços</a></p><p><a href="sobre.html">Sobre</a></p><p><a href="galeria.html">Galeria</a></p></div>
+    <div><h4>Cliente</h4><p><a href="agendamento.html">Agendar horário</a></p><p><a href="meus-horarios.html">Meus horários</a></p><p><a id="waLink" href="#" target="_blank" rel="noopener">WhatsApp</a></p></div>
+    <div><h4>Estúdio</h4><p>Atendimento com hora marcada</p><p>Segunda a sábado · das 9h às 19h</p><p><a href="admin.html">Área da Carol</a></p></div>
+  </div>
+  <div class="container footer-bottom"><span>© <span id="year"></span> Nails by Nascimento</span><span>Feito com carinho</span></div>
+</footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/app-core.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>

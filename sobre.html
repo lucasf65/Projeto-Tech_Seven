@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sobre — Nails by Nascimento</title>
+<meta name="description" content="Conheça a história de Carol Nascimento, nail designer.">
+<link rel="icon" href="assets/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+    <!-- Tela de Transição -->
+<div id="page-transition">
+  <img src="assets/logo.png" alt="Carregando..." onerror="this.style.display='none'">
+  <span>Nails by Nascimento</span>
+</div>
+
+<header class="site-header">
+  <div class="container nav-wrap">
+    <a class="brand" href="index.html"><img src="assets/logo.png" alt="" onerror="this.style.display='none'"><div class="brand-meta"><strong>Carol Nascimento</strong><span>Nails · Estúdio</span></div></a>
+    <button class="nav-toggle" aria-label="Abrir menu" aria-expanded="false"><span></span></button>
+    <nav class="nav-links" aria-label="Principal">
+      <a href="index.html">Início</a>
+      <a href="servicos.html">Serviços</a>
+      <a href="precos.html">Preços</a>
+      <a href="galeria.html">Galeria</a>
+      <a href="sobre.html" aria-current="page">Sobre</a>
+      <a href="meus-horarios.html">Meus horários</a>
+    </nav>
+    <div class="nav-cta"><a class="btn btn-primary" href="agendamento.html">Agendar horário <span class="arrow">→</span></a></div>
+  </div>
+</header>
+
+<main>
+  <section class="section">
+    <div class="container" style="display:grid;grid-template-columns:1fr 1.1fr;gap:clamp(32px,6vw,80px);align-items:center" id="aboutGrid">
+      <div class="reveal">
+        <!-- Usei --soft em vez de --nude para manter a paleta original -->
+        <img src="assets/carol.jpg" alt="Carol Nascimento" style="width:100%;border-radius:var(--r-xl);aspect-ratio:4/5;object-fit:cover;background:var(--soft)" onerror="this.parentNode.style.background='var(--soft)'">
+      </div>
+      <div class="reveal">
+        <span class="eyebrow">Sobre mim</span>
+        <h1 style="margin:18px 0 20px;font-size:clamp(32px,4.6vw,56px)">Prazer, meu nome é Carol.</h1>
+        <p class="lead" style="margin-bottom:18px">Meu interesse pelo universo das unhas começou aos 13 anos, quando passei a assistir a vídeos sobre cuidados com as unhas em casa. Naquela época, porém, ainda não pensava em seguir essa área profissionalmente.</p>
+        <p class="lead" style="margin-bottom:18px">Em dezembro de 2024, surgiu a oportunidade de trabalhar em um salão perto de casa. Mesmo tendo pouca experiência e já trabalhando com carteira assinada em outra empresa, aceitei o desafio e passei alguns meses aprendendo e desenvolvendo minhas habilidades.</p>
+        <p class="lead" style="margin-bottom:28px">Em abril de 2025, percebi que queria transformar aquele trabalho extra em minha profissão. Fiz um curso de especialização, decidi trabalhar por conta própria e comecei a atender a domicílio. Pouco tempo depois, passei a receber minhas clientes na sala de casa.</p>
+        <a class="btn btn-primary" href="agendamento.html">Conheça meus serviços <span class="arrow">→</span></a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-alt">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow">Diferenciais</span>
+          <h2>Por que minhas clientes voltam?</h2>
+        </div>
+      </div>
+      <div class="grid grid-3">
+        <article class="card"><div class="icon">✦</div><h3>Atendimento acolhedor</h3><p class="lead" style="font-size:14px">Um ambiente reservado e tranquilo, com um horário dedicado inteiramente a você.</p></article>
+        <article class="card"><div class="icon">✦</div><h3>Produtos de alta qualidade</h3><p class="lead" style="font-size:14px">Produtos selecionados para proporcionar durabilidade e um acabamento de qualidade.</p></article>
+        <article class="card"><div class="icon">✦</div><h3>Técnica impecável</h3><p class="lead" style="font-size:14px">Aprimoramento constante e atenção a cada detalhe, da cutícula ao brilho final.</p></article>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- Adicionei a regra de responsividade dentro de uma tag <style> corretamente, mas fora do body visual para não quebrar nada -->
+<style>@media(max-width:900px){#aboutGrid{grid-template-columns:1fr!important}}</style>
+
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div><div class="footer-brand">Nails by Nascimento<small>Manicure & Nail Design</small></div><p style="margin-top:16px">Estúdio de manicure com atendimento personalizado e hora marcada.</p></div>
+    <div><h4>Navegar</h4><p><a href="servicos.html">Serviços</a></p><p><a href="precos.html">Preços</a></p><p><a href="sobre.html">Sobre</a></p><p><a href="galeria.html">Galeria</a></p></div>
+    <div><h4>Cliente</h4><p><a href="agendamento.html">Agendar horário horário</a></p><p><a href="meus-horarios.html">Meus horários</a></p><p><a id="waLink" href="#" target="_blank" rel="noopener">WhatsApp</a></p></div>
+    <div><h4>Estúdio</h4><p>Atendimento com hora marcada</p><p>Segunda a sábado · das 9h às 19h</p><p><a href="admin.html">Área da Carol</a></p></div>
+  </div>
+  <div class="container footer-bottom"><span>© <span id="year"></span> Nails by Nascimento</span><span>Feito com carinho</span></div>
+</footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/app-core.js"></script>
+<script src="js/site.js"></script>
+</body>
+</html>
