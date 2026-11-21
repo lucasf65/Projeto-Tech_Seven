@@ -59,7 +59,7 @@ async function findAppointments(){
     if(can){
       el.querySelector('.cancel').addEventListener('click',async()=>{
         if(confirm('Tem certeza que deseja cancelar este agendamento?')){
-          await db.collection('agendamentos').doc(a.id).update({status:'cancelado'});
+          await db.collection('agendamentos').doc(a.id).update({status:'cancelado',canceladoPor:'cliente'});
           toast('Agendamento cancelado.'); 
           findAppointments();
         }
@@ -70,7 +70,7 @@ async function findAppointments(){
           toast('Limite de 3 reagendamentos atingido. Fale com a Carol.'); 
           return; 
         }
-        await db.collection('agendamentos').doc(a.id).update({status:'cancelado',reagendamentos:(a.reagendamentos||0)+1});
+        await db.collection('agendamentos').doc(a.id).update({status:'cancelado',canceladoPor:'reagendamento',reagendamentos:(a.reagendamentos||0)+1});
         location.href='agendamento.html';
       });
     }

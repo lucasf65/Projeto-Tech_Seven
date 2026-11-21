@@ -1,33 +1,97 @@
 # 💅 Nails by Nascimento — Sistema de Agendamento
 
-> Protótipo web e documentação desenvolvidos como parte da AAP 4 do projeto **Tech Seven**.
+![Status do Projeto](https://img.shields.io/badge/status-conclu%C3%ADdo-success)
+![Versão](https://img.shields.io/badge/vers%C3%A3o-1.0.0-blue)
+![Licença](https://img.shields.io/badge/licen%C3%A7a-Acad%C3%AAmica-lightgrey)
 
-## 📋 Sobre o Projeto
+Sistema web completo e responsivo para gestão de agendamentos de um estúdio de manicure. Desenvolvido para otimizar o fluxo de trabalho da profissional (Carol) e proporcionar uma experiência de agendamento premium e sem fricção para as clientes.
 
-O **Nails by Nascimento** é uma aplicação web voltada para a gestão de agendamentos de um estúdio de manicure profissional (Carol Nascimento). O sistema permite que clientes marquem horários de forma simples e rápida sem precisar criar senhas[cite: 4], enquanto a profissional gerencia a agenda, status de atendimento, disponibilidades e faturamento através de um painel administrativo protegido.
+---
 
- 🛠️ Tecnologias Utilizadas
+## 📑 Índice
 
-Este projeto foi construído utilizando as seguintes tecnologias e ferramentas:
+- [✨ Funcionalidades](#-funcionalidades)
+- [🛠️ Tecnologias Utilizadas](#️-tecnologias-utilizadas)
+- [📂 Estrutura do Projeto](#-estrutura-do-projeto)
+- [🚀 Como Executar e Configurar](#-como-executar-e-configurar)
+- [🔒 Segurança (Firestore Rules)](#-segurança-firestore-rules)
+- [🎨 Design System](#-design-system)
+- [📝 Licença](#-licença)
 
-* **Front-end:** HTML5, CSS3 e JavaScript (Vanilla)[cite: 1, 4, 6]
-* **Banco de Dados & Backend:** Firebase Firestore e Firebase Authentication[cite: 1, 2, 3]
-* **Estilização:** Google Fonts (Cormorant Garamond e Poppins) e design responsivo customizado[cite: 4, 6]
+---
 
-## 🗂️ Estrutura do Repositório
+## ✨ Funcionalidades
 
-A organização dos arquivos e pastas do projeto segue a seguinte estrutura:
+O sistema foi dividido em duas grandes áreas: **Área da Cliente** e **Área Administrativa**.
+
+### 👩‍🦰 Área da Cliente (Público)
+
+- **Site Institucional:** Páginas de Início, Serviços, Preços, Galeria e Sobre, todas alimentadas dinamicamente pelo banco de dados.
+- **Agendamento Inteligente:** Fluxo em 4 etapas (Serviço → Data/Hora → Dados → Sinal PIX).
+- **Calendário Customizado:** Interface elegante para escolha de datas, bloqueando dias passados e horários já ocupados.
+- **Pagamento de Sinal:** Integração visual com chave PIX para reserva do horário.
+- **Consulta de Horários:** Área "Meus Horários" onde a cliente pode consultar, cancelar ou reagendar seu atendimento usando apenas o WhatsApp.
+- **Galeria Dinâmica:** Portfólio com suporte a até 9 fotos (ou mais) exibidas em uma grade responsiva.
+- **Design Responsivo:** Experiência fluida em computadores, tablets e celulares.
+
+### 👑 Área Administrativa (Carol)
+
+- **Autenticação Segura:** Login exclusivo via Firebase Authentication (E-mail/Senha).
+- **Dashboard Inteligente:** Visualização rápida de solicitações pendentes, aguardando sinal e confirmadas no dia.
+- **Gestão de Solicitações:** Aprovar, recusar, cobrar sinal via WhatsApp, confirmar e concluir atendimentos.
+- **Gestão de Agenda:** Modal interativo para bloquear ou liberar horários específicos em qualquer data.
+- **Gestão de Catálogo:** Criar, editar e excluir serviços (Nome, Descrição, Duração, Preço e Emoji).
+- **Gestão de Galeria:** Adicionar e remover fotos do portfólio dinamicamente.
+- **Relatório de Faturamento:** Cálculo automático da receita baseada nos atendimentos concluídos.
+
+---
+
+## 🛠️ Tecnologias Utilizadas
+
+O projeto foi construído utilizando tecnologias web nativas (Vanilla) para garantir máxima performance e leveza, sem a necessidade de frameworks complexos.
+
+| Camada | Tecnologia | Descrição |
+|---|---|---|
+| **Frontend** | HTML5 | Estrutura semântica das páginas |
+| **Frontend** | CSS3 | Design System próprio com CSS Variables |
+| **Frontend** | JavaScript (ES6+) | Lógica do lado do cliente |
+| **BaaS** | [Firebase](https://firebase.google.com/) | Backend as a Service |
+| **Banco de Dados** | Firestore | Banco NoSQL em tempo real |
+| **Autenticação** | Firebase Auth | Login seguro do painel admin |
+| **Tipografia** | Google Fonts | Cormorant Garamond + Poppins |
+
+---
+
+## 📂 Estrutura do Projeto
+
+A arquitetura foi pensada para ser modular e de fácil manutenção:
 
 ```text
-├── docs/
-│   ├── 01-requisitos/    # Levantamento de requisitos do sistema
-│   ├── 02-modelagem/     # Diagramas BPMN, DER e modelo de banco de dados
-│   ├── 03-processo/      # Fluxo completo do processo (AS IS / TO BE)[cite: 5]
-│   └── 04-entrega/       # Aplicação funcional e monografia[cite: 5]
-├── index.html            # Página principal da aplicação web[cite: 4, 5]
-├── app.js                # Lógica principal e integração com Firebase[cite: 1, 5]
-├── styles.css            # Folha de estilos global[cite: 5, 6]
-├── firebase-config.js    # Configuração de conexão com o Firebase[cite: 2, 5]
-├── firestore.rules       # Regras de segurança do Firestore
-├── logo.png              # Logotipo oficial da marca[cite: 4, 5]
-└── README.md             # Documentação do projeto
+/
+├── index.html              # Página inicial
+├── servicos.html           # Catálogo de serviços
+├── precos.html             # Tabela de preços
+├── galeria.html            # Portfólio
+├── sobre.html              # História da Carol
+├── agendamento.html        # Fluxo de agendamento (Cliente)
+├── meus-horarios.html      # Consulta de agendamentos (Cliente)
+├── admin.html              # Painel da Carol (Admin)
+│
+├── /css
+│   └── styles.css          # Design System global (13 seções organizadas)
+│
+├── /js
+│   ├── firebase-config.js  # Credenciais do Firebase
+│   ├── app-core.js         # Funções utilitárias e globais
+│   ├── site.js             # Renderização das páginas públicas
+│   ├── booking.js          # Lógica do agendamento e calendário
+│   ├── lookup.js           # Lógica da consulta "Meus Horários"
+│   └── admin.js            # Lógica do painel administrativo
+│
+├── /assets
+│   ├── logo.png
+│   ├── hero.jpg
+│   ├── carol.jpg
+│   └── /gallery            # Fotos do portfólio (01.jpg a 09.jpg)
+│
+└── firestore.rules         # Regras de segurança do banco de dados

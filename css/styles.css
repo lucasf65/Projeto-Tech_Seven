@@ -1175,15 +1175,3 @@ main.page-enter {
   box-shadow: 0 4px 12px rgba(0,0,0,0.2);
   border-radius: 50%; /* Mantém redondo */
 }
-
-/* Ajuste fino para garantir que a galeria fique bonita com até 9 fotos */
-.gallery {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 12px;
-}
-
-/* Força todas as imagens a manterem uma proporção quadrada perfeita */
-.gallery figure {
-  aspect-ratio: 1 / 1; 
-}

@@ -1,18 +1,31 @@
 'use strict';
 const bookingState = { service: null, date: keyDate(new Date()), time: null, appointmentId: null };
 let servicesCache = [];
-
-/* ===== CALENDÁRIO ===== */
-let currentMonth = new Date().getMonth();
-let currentYear = new Date().getFullYear();
-const monthsNames = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+let bookingCal = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
   if(!document.getElementById('services')) return;
   document.getElementById('pixKey').textContent = PIX_KEY;
   servicesCache = await loadServices();
   renderServices();
-  initCalendar();
+
+  bookingCal = createCalendar({
+    gridEl: document.getElementById('calendarGrid'),
+    monthSelectEl: document.getElementById('calMonth'),
+    yearSelectEl: document.getElementById('calYear'),
+    prevBtn: document.getElementById('prevMonth'),
+    nextBtn: document.getElementById('nextMonth'),
+    disablePast: true,
+    selectedDate: bookingState.date,
+    onSelect: async (k) => {
+      bookingState.date = k;
+      bookingState.time = null;
+      await renderSlots();
+      updateSummary();
+      setStep(currentStep());
+    }
+  });
+
   await renderSlots();
   updateSummary();
 
@@ -56,89 +69,9 @@ function renderServices() {
   }));
 }
 
-/* ===== LÓGICA DO CALENDÁRIO ===== */
-function initCalendar() {
-  const mSel = document.getElementById('calMonth');
-  const ySel = document.getElementById('calYear');
-
-  mSel.innerHTML = monthsNames.map((m, i) => `<option value="${i}">${m}</option>`).join('');
-  mSel.value = currentMonth;
-
-  const yNow = new Date().getFullYear();
-  let yOpts = '';
-  for (let i = 0; i < 3; i++) yOpts += `<option value="${yNow + i}">${yNow + i}</option>`;
-  ySel.innerHTML = yOpts;
-  ySel.value = currentYear;
-
-  mSel.addEventListener('change', e => { currentMonth = +e.target.value; renderCalendar(); });
-  ySel.addEventListener('change', e => { currentYear = +e.target.value; renderCalendar(); });
-
-  document.getElementById('prevMonth').addEventListener('click', () => {
-    currentMonth--;
-    if (currentMonth < 0) { currentMonth = 11; currentYear--; }
-    mSel.value = currentMonth;
-    if (ySel.querySelector(`option[value="${currentYear}"]`)) ySel.value = currentYear;
-    renderCalendar();
-  });
-
-  document.getElementById('nextMonth').addEventListener('click', () => {
-    currentMonth++;
-    if (currentMonth > 11) { currentMonth = 0; currentYear++; }
-    mSel.value = currentMonth;
-    if (ySel.querySelector(`option[value="${currentYear}"]`)) ySel.value = currentYear;
-    renderCalendar();
-  });
-
-  renderCalendar();
-}
-
-function renderCalendar() {
-  const grid = document.getElementById('calendarGrid');
-  if (!grid) return;
-  grid.innerHTML = '';
-
-  const firstDay = new Date(currentYear, currentMonth, 1).getDay();
-  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  // Dias vazios antes do dia 1
-  for (let i = 0; i < firstDay; i++) {
-    const empty = document.createElement('div');
-    empty.className = 'cal-day empty';
-    grid.appendChild(empty);
-  }
-
-  // Dias do mês
-  for (let d = 1; d <= daysInMonth; d++) {
-    const dateObj = new Date(currentYear, currentMonth, d);
-    const k = keyDate(dateObj);
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'cal-day';
-    btn.textContent = d;
-
-    if (dateObj < today) {
-      btn.classList.add('disabled');
-      btn.disabled = true;
-    } else {
-      if (k === bookingState.date) btn.classList.add('selected');
-      btn.addEventListener('click', async () => {
-        bookingState.date = k;
-        bookingState.time = null;
-        renderCalendar();
-        await renderSlots();
-        updateSummary();
-        setStep(currentStep());
-      });
-    }
-    grid.appendChild(btn);
-  }
-}
-
 /* ===== HORÁRIOS E ENVIO ===== */
 async function renderSlots() {
-  const r = document.getElementById('slots'); 
+  const r = document.getElementById('slots');
   r.innerHTML = '';
   document.getElementById('chosenDate').textContent = 'Horários para ' + br(bookingState.date, true);
 
@@ -159,13 +92,13 @@ async function renderSlots() {
     const b = document.createElement('button');
     b.type = 'button';
     b.className = 'slot' + (bookingState.time === t ? ' selected' : '');
-    b.textContent = t; 
+    b.textContent = t;
     b.disabled = busy[i] || closed[i];
-    b.addEventListener('click', () => { 
-      bookingState.time = t; 
-      renderSlots(); 
-      updateSummary(); 
-      setStep(currentStep()); 
+    b.addEventListener('click', () => {
+      bookingState.time = t;
+      renderSlots();
+      updateSummary();
+      setStep(currentStep());
     });
     r.appendChild(b);
   });
