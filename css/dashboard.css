@@ -1,0 +1,169 @@
+/* =========================================================
+   DASHBOARD — Área da Carol
+   Usa as variáveis do styles.css (--ink, --line, --ok, --bad…)
+   ========================================================= */
+
+.dash{padding-top:clamp(28px,4vw,48px)}
+.kpi svg,.empty-state svg,.month-nav svg{display:block}
+
+/* ---------- Topo ---------- */
+.dash-top{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;margin-bottom:28px}
+.dash-top h1{font-size:clamp(32px,4.4vw,52px);margin-top:12px}
+.dash-tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.dash-tools .btn svg{display:inline-block;vertical-align:middle;margin:-2px 6px -2px -4px}
+
+.month-nav{display:inline-flex;align-items:center;background:var(--white);border:1px solid var(--line);border-radius:999px;padding:4px}
+.month-nav button{display:grid;place-items:center;width:36px;height:36px;border:0;border-radius:50%;background:transparent;color:var(--ink);cursor:pointer;transition:background .2s var(--ease)}
+.month-nav button:hover{background:var(--soft)}
+.month-nav button:focus-visible{outline:2px solid var(--ink);outline-offset:1px}
+.month-nav strong{min-width:150px;text-align:center;font-size:14px;font-weight:600}
+
+.live{display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border:1px solid var(--line);border-radius:999px;background:var(--white);font-size:12px;color:var(--muted);font-weight:500}
+.live i{width:8px;height:8px;border-radius:50%;background:var(--ok);animation:livePulse 2s infinite}
+.live.off i{background:var(--line-2);animation:none}
+@keyframes livePulse{0%{box-shadow:0 0 0 0 #46654d80}70%{box-shadow:0 0 0 8px #46654d00}100%{box-shadow:0 0 0 0 #46654d00}}
+
+/* ---------- Carregamento ---------- */
+.kpi-grid,.dash-grid{transition:opacity .5s var(--ease)}
+.is-loading .kpi-grid,.is-loading .dash-grid{opacity:.4;pointer-events:none}
+
+/* ---------- KPIs ---------- */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}
+.kpi{display:flex;flex-direction:column;gap:4px;min-width:0;padding:20px 22px;background:var(--white);border:1px solid var(--line);border-radius:var(--r);transition:border-color .2s var(--ease)}
+.kpi:hover{border-color:var(--line-2)}
+.kpi-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.kpi-label{font-size:13px;font-weight:500;line-height:1.35;color:var(--muted);padding-top:2px}
+.kpi-icon{display:grid;place-items:center;flex:none;width:38px;height:38px;border-radius:11px;background:var(--mist);border:1px solid var(--line);color:var(--ink)}
+.kpi-val{font-family:var(--font-body);font-size:34px;font-weight:600;letter-spacing:-.025em;line-height:1.15;margin-top:10px;font-variant-numeric:lining-nums tabular-nums}
+.kpi-hint{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;min-height:24px;margin-top:6px;font-size:12px;color:var(--muted)}
+
+.kpi.wide{grid-column:span 2;background:var(--ink);border-color:var(--ink);color:#fff}
+.kpi.wide .kpi-label,.kpi.wide .kpi-hint,.kpi.wide .delta-note{color:#bdb6ae}
+.kpi.wide .kpi-icon{background:#ffffff12;border-color:#ffffff1f;color:#dcc08a}
+.kpi.wide .kpi-val{font-size:clamp(42px,4.6vw,56px);margin-top:18px}
+
+.delta{display:inline-flex;align-items:center;gap:3px;padding:3px 9px 3px 7px;border-radius:999px;font-size:11.5px;font-weight:600;line-height:1.4}
+.delta svg{width:12px;height:12px}
+.delta.up{background:#46654d1a;color:var(--ok)}
+.delta.down{background:#9651541a;color:var(--bad)}
+.delta.flat{background:#7373731a;color:var(--muted)}
+.delta-note{font-size:12px;color:var(--muted)}
+.kpi.wide .delta.up{background:#9fd3aa24;color:#a9dcb4}
+.kpi.wide .delta.down{background:#eaa9ac24;color:#f0b4b7}
+.kpi.wide .delta.flat{background:#ffffff14;color:#d6d0ca}
+
+/* ---------- Grade dos gráficos ---------- */
+.dash-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:18px}
+.span-8{grid-column:span 8}
+.span-4{grid-column:span 4}
+
+.dash-card{display:flex;flex-direction:column;min-width:0;padding:24px 24px 20px}
+.dash-card:hover{transform:none;box-shadow:var(--shadow-sm)}
+.dash-card h3{font-size:24px;margin:8px 0 0}
+.dash-card .sub{font-size:12.5px;color:var(--muted);margin:4px 0 16px}
+
+.chart-box{position:relative;flex:1 1 auto;min-width:0;min-height:310px}
+.chart-box.sm{min-height:250px}
+
+/* ---------- Legendas (HTML, clicáveis) ---------- */
+.chart-legend{display:flex;flex-wrap:wrap;gap:6px 8px;margin:0 0 12px}
+.lg{display:inline-flex;align-items:center;gap:8px;padding:5px 11px 5px 9px;border:1px solid var(--line);border-radius:999px;background:var(--white);font:500 12px/1.2 var(--font-body);color:var(--ink-soft);cursor:pointer;transition:opacity .2s var(--ease),border-color .2s var(--ease)}
+.lg:hover{border-color:var(--line-2)}
+.lg:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.lg.off{opacity:.45}
+.sw{display:inline-block;flex:none;background:var(--c)}
+.sw.bar{width:10px;height:10px;border-radius:3px}
+.sw.line{width:16px;height:3px;border-radius:2px}
+
+.legend-list{list-style:none;margin:16px 0 0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 14px}
+.legend-list li{min-width:0;display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-soft)}
+.legend-list li.zero{opacity:.45}
+.legend-list span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.legend-list i{width:9px;height:9px;border-radius:3px;flex:none}
+.legend-list b{margin-left:auto;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+
+/* ---------- Estado vazio (substitui o véu branco sobre o gráfico) ---------- */
+.empty-state{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:0 24px;text-align:center;font-size:13px;line-height:1.5;color:var(--muted);border:1px dashed var(--line-2);border-radius:var(--r-sm)}
+.empty-state svg{opacity:.55}
+.dash-card[data-empty="1"] .empty-state{display:flex}
+.dash-card[data-empty="1"] .plot,
+.dash-card[data-empty="1"] .chart-legend,
+.dash-card[data-empty="1"] .legend-list{visibility:hidden}
+
+/* ---------- Responsivo ---------- */
+@media(max-width:1100px){
+  .span-8{grid-column:span 12}
+  .span-4{grid-column:span 6}
+  .kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:700px){
+  .span-4{grid-column:span 12}
+}
+@media(max-width:560px){
+  .kpi{padding:16px}
+  .kpi-val{font-size:28px}
+  .month-nav strong{min-width:120px}
+  .dash-card{padding:20px 18px 16px}
+  .legend-list{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){
+  .live i{animation:none}
+  .kpi,.lg,.kpi-grid,.dash-grid{transition:none}
+}
+
+/* ---------- Gráficos próprios (SVG/HTML) ---------- */
+.plot{position:absolute;inset:0}
+.plot svg{display:block;overflow:visible}
+.plot .gl{stroke:#e9e5df;stroke-width:1}
+.plot .gl.z{stroke:#d6d0c8}
+.plot .ax{font:400 11.5px var(--font-body);fill:#8a847c}
+.plot .ax.r{fill:#8a6531}
+.plot .yr{font-size:10.5px;fill:#a39d94}
+.plot .ln{stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.plot .dot{fill:#fff;stroke-width:2;transition:r .12s var(--ease)}
+.plot .dot.hv{opacity:0}
+.plot .col:hover .dot.hv{opacity:1}
+.plot .col:hover .dot{r:6}
+.plot .xh{stroke:#28282826;stroke-width:1;opacity:0}
+.plot .col:hover .xh{opacity:1}
+.plot .hit{fill:transparent}
+.plot .dn{font:600 32px var(--font-body);fill:var(--ink)}
+.plot .dl{font:500 11.5px var(--font-body);fill:#8a847c}
+.plot .seg{transition:opacity .15s var(--ease)}
+.plot .donut:has(.seg:hover) .seg:not(:hover){opacity:.3}
+
+/* ranking de serviços */
+.rank{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.rk-row{display:flex;align-items:baseline;gap:10px;font-size:13px;line-height:18px}
+.rk-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500;color:var(--ink)}
+.rk-rev{flex:none;font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.rk-val{flex:none;min-width:20px;text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+.rk-track{height:6px;margin-top:6px;border-radius:99px;background:#efebe5;overflow:hidden}
+.rk-track i{display:block;height:100%;border-radius:99px;background:var(--ink-soft)}
+.rk-track i.top{background:#b08a4a}
+
+/* tooltip */
+.ctip{position:fixed;left:0;top:0;z-index:60;max-width:260px;padding:10px 12px;border-radius:10px;background:var(--ink);color:#fff;font:400 12px/1.45 var(--font-body);pointer-events:none;opacity:0;transition:opacity .12s var(--ease)}
+.ctip.on{opacity:1}
+.ctip .tt{margin-bottom:6px;font-weight:600}
+.ctip .tr{display:flex;align-items:center;gap:8px;white-space:nowrap}
+.ctip .tr i{width:8px;height:8px;border-radius:50%;flex:none;box-shadow:0 0 0 1.5px #ffffff40}
+.ctip .tr b{margin-left:auto;padding-left:14px;font-weight:600;font-variant-numeric:tabular-nums}
+
+/* animação de entrada (só quando os dados mudam) */
+@keyframes grow{from{transform:scaleY(0)}}
+@keyframes growx{from{transform:scaleX(0)}}
+@keyframes draw{from{stroke-dasharray:1;stroke-dashoffset:1}to{stroke-dasharray:1;stroke-dashoffset:0}}
+@keyframes fade{from{opacity:0}}
+.plot .anim .bar{transform-box:fill-box;transform-origin:50% 100%;animation:grow .7s var(--ease) both;animation-delay:calc(var(--i) * 35ms)}
+.plot .anim .ln{animation:draw 1s var(--ease) .2s both}
+.plot .anim .area,.plot .anim .dot{animation:fade .6s var(--ease) .5s both}
+.plot .anim .seg{animation:fade .7s var(--ease) both;animation-delay:calc(var(--i) * 70ms)}
+.rank.anim .rk-track i{transform-origin:0 50%;animation:growx .7s var(--ease) both;animation-delay:calc(var(--i) * 70ms)}
+@media(prefers-reduced-motion:reduce){.plot *,.rank *{animation:none!important}}
+
+/* Primeiro bloco: mais espaço para a rosca e sua legenda em telas largas */
+@media(min-width:1101px){
+  .dash-grid>.dash-card:nth-child(1){grid-column:span 7}
+  .dash-grid>.dash-card:nth-child(2){grid-column:span 5}
+}

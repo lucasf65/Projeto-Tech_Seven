@@ -1,0 +1,29 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAdmin(){ return exists(/databases/$(database)/documents/admins/$(request.auth.uid)); }
+
+    match /servicos/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /disponibilidades/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /galeria/{id} { allow read: if true; allow write: if isAdmin(); }
+
+    match /clientes/{id} {
+      allow create: if request.resource.data.telefone is string;
+      allow read, update: if isAdmin();
+    }
+
+    match /agendamentos/{id} {
+      allow create: if request.resource.data.status == 'pendente'
+                    && request.resource.data.telefone is string;
+      allow read: if true;
+      allow update: if isAdmin()
+        || (request.resource.data.status == 'cancelado'
+            && resource.data.status in ['pendente','aguardando-sinal','confirmado'])
+        || (request.resource.data.deposito == 'pago'
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['deposito','pixStatus','pixPagoEm']));
+      allow delete: if isAdmin();
+    }
+
+    match /admins/{uid} { allow read: if request.auth.uid == uid; allow write: if false; }
+  }
+}
