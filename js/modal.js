@@ -2,25 +2,7 @@
 /* =========================================================
    COMPONENTE DE MODAL ÚNICO (comportamento, não visual)
    Unifica abrir/fechar, clique no fundo, tecla ESC e o
-   scroll-lock do body — que antes só existia no modal de
-   agenda (admin.js) e faltava no modal de novo serviço.
-
-   As duas aparências (modal-overlay simples e
-   modal-agenda-overlay em duas colunas) continuam existindo
-   no styles.css porque representam conteúdos diferentes
-   (formulário x painel de calendário/horários); só a lógica
-   de controle foi unificada aqui.
-
-   Uso:
-     const modal = createModal({
-       overlayEl: document.getElementById('serviceModal'),
-       openBtn: document.getElementById('openServiceModal'),
-       closeBtn: document.querySelector('#serviceModal .close-modal'),
-       lockScroll: false,       // true trava o scroll da página por trás (usado na agenda)
-       onOpen: () => { ... },   // opcional: roda toda vez que abre
-       onClose: () => { ... }   // opcional: roda toda vez que fecha
-     });
-     modal.open(); modal.close();
+   scroll-lock do body, usado pelos dois modais do admin.
    ========================================================= */
 
 function createModal(opts) {
@@ -28,7 +10,7 @@ function createModal(opts) {
     overlayEl,
     openBtn = null,
     closeBtn = null,
-    extraCloseBtns = [],     // ex.: botão "Concluir" do modal de agenda também fecha
+    extraCloseBtns = [],
     lockScroll = false,
     closeOnBackdrop = true,
     closeOnEsc = true,

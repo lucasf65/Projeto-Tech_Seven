@@ -4,32 +4,9 @@
    Substitui initCalendar/renderCalendar (booking.js) e
    initAdminCalendar/renderAdminCalendar (admin.js), que tinham
    a mesma lógica de grid duplicada em dois arquivos.
-
-   Uso (cliente, com <select> de mês/ano):
-     const cal = createCalendar({
-       gridEl: document.getElementById('calendarGrid'),
-       monthSelectEl: document.getElementById('calMonth'),
-       yearSelectEl: document.getElementById('calYear'),
-       prevBtn: document.getElementById('prevMonth'),
-       nextBtn: document.getElementById('nextMonth'),
-       disablePast: true,
-       onSelect: (dateKey) => { bookingState.date = dateKey; renderSlots(); }
-     });
-
-   Uso (admin, com setas e sem bloquear datas passadas):
-     const cal = createCalendar({
-       gridEl: document.getElementById('adminCalendarGrid'),
-       monthLabelEl: document.getElementById('adminCalMonth'),
-       yearLabelEl: document.getElementById('adminCalYear'),
-       prevBtn: document.getElementById('adminPrevMonth'),
-       nextBtn: document.getElementById('adminNextMonth'),
-       disablePast: false,
-       onSelect: (dateKey) => { renderAvailability(); }
-     });
    ========================================================= */
 
 const MONTHS_FULL = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-const MONTHS_SHORT = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 
 function createCalendar(opts) {
   const {

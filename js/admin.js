@@ -3,15 +3,9 @@ const adminState = { isAdmin: false, adminUid: null };
 let selectedEmoji = '💅';
 
 document.addEventListener('DOMContentLoaded', () => {
-  // 1. Inicializa o Modal de Novo Serviço (Independente do login)
-  if (document.getElementById('serviceModal')) {
-    initServiceModal();
-  }
-
-  // 2. Inicializa o Modal de Agenda
+  if (document.getElementById('serviceModal')) initServiceModal();
   initAdminCalendarModal();
 
-  // 3. Lógica do Login e Painel
   if (!document.getElementById('adminLogin')) return;
 
   document.getElementById('adminLoginBtn').addEventListener('click', () => {
@@ -44,13 +38,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /* =========================================
    MODAL DE NOVO SERVIÇO
-   (comportamento de abrir/fechar vem do modal.js)
    ========================================= */
 function initServiceModal() {
   const overlayEl = document.getElementById('serviceModal');
   const emojiBtn = document.getElementById('emojiBtn');
   const emojiDropdown = document.getElementById('emojiDropdown');
-
   if (!overlayEl) return;
 
   const resetForm = () => {
@@ -127,12 +119,7 @@ function initServiceModal() {
       const newId = maxId + 1;
 
       await db.collection('servicos').doc(newId.toString()).set({
-        id: newId,
-        name: name,
-        description: desc,
-        duration: duration,
-        price: price,
-        icon: selectedEmoji
+        id: newId, name, description: desc, duration, price, icon: selectedEmoji
       });
 
       serviceModal.close();
@@ -150,8 +137,6 @@ function initServiceModal() {
 
 /* =========================================
    MODAL DE AGENDA (PREMIUM)
-   Grid do calendário vem do calendar.js;
-   abrir/fechar + scroll-lock vem do modal.js.
    ========================================= */
 let adminCal = null;
 
@@ -187,23 +172,18 @@ function initAdminCalendarModal() {
     }
   });
 
-  // Mantido para eventual chamada externa (ex.: reabrir já numa data específica)
   window.__openAgendaModal = agendaModal.open;
 }
 
-/* =========================================
-   RENDERIZAÇÃO DOS HORÁRIOS NO MODAL
-   ========================================= */
 async function renderAvailability() {
   const d = document.getElementById('availDate').value || keyDate(new Date());
   const r = document.getElementById('modalAvailability');
-
-  if(!r) return;
+  if (!r) return;
 
   const dateObj = new Date(d + 'T12:00:00');
   const formattedDate = dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
   const elDate = document.getElementById('modalSelectedDate');
-  if(elDate) elDate.textContent = formattedDate;
+  if (elDate) elDate.textContent = formattedDate;
 
   r.innerHTML = '<div style="font-size:12px; color:var(--muted); grid-column:1/-1; text-align:center; padding: 20px;">Buscando...</div>';
 
@@ -226,27 +206,18 @@ async function renderAvailability() {
         if (b.disabled) return;
 
         const isCurrentlyOff = b.classList.contains('off');
-        if (isCurrentlyOff) b.classList.remove('off');
-        else b.classList.add('off');
-
+        if (isCurrentlyOff) b.classList.remove('off'); else b.classList.add('off');
         b.style.opacity = '0.5';
 
         try {
           const ref = db.collection('disponibilidades').doc(d);
           const doc = await ref.get();
           let list = doc.exists ? (doc.data().closed || []) : [];
-
-          if (isCurrentlyOff) {
-            list = list.filter(x => x !== t);
-          } else {
-            list.push(t);
-          }
-
+          list = isCurrentlyOff ? list.filter(x => x !== t) : [...list, t];
           await ref.set({ closed: list }, { merge: true });
         } catch(err) {
           console.error(err);
-          if (isCurrentlyOff) b.classList.add('off');
-          else b.classList.remove('off');
+          if (isCurrentlyOff) b.classList.add('off'); else b.classList.remove('off');
           toast('Erro ao salvar no Firebase.');
         } finally {
           b.style.opacity = '1';
@@ -389,10 +360,7 @@ async function renderAdminServices() {
     const snap = await db.collection('servicos').orderBy('id').get();
     r.innerHTML = '';
 
-    if (snap.empty) {
-      r.innerHTML = '<div class="empty">Nenhum serviço cadastrado.</div>';
-      return;
-    }
+    if (snap.empty) { r.innerHTML = '<div class="empty">Nenhum serviço cadastrado.</div>'; return; }
 
     snap.docs.forEach(doc => {
       const s = doc.data();

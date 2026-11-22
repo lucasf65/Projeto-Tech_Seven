@@ -4,7 +4,7 @@ let servicesCache = [];
 let bookingCal = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
-  if(!document.getElementById('services')) return;
+  if (!document.getElementById('services')) return;
   document.getElementById('pixKey').textContent = PIX_KEY;
   servicesCache = await loadServices();
   renderServices();
@@ -69,7 +69,6 @@ function renderServices() {
   }));
 }
 
-/* ===== HORÁRIOS E ENVIO ===== */
 async function renderSlots() {
   const r = document.getElementById('slots');
   r.innerHTML = '';
@@ -83,7 +82,6 @@ async function renderSlots() {
     closed = await Promise.all(SLOTS.map(t => isSlotClosed(bookingState.date, t)));
   } catch (error) {
     console.error("Erro ao checar disponibilidade:", error);
-    // Se der erro no Firebase, libera todos os horários para não travar a tela
     busy = SLOTS.map(() => false);
     closed = SLOTS.map(() => false);
   }

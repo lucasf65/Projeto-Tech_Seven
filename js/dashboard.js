@@ -63,6 +63,53 @@ const ymKey = (y, m) => `${y}-${String(m + 1).padStart(2, '0')}`;
 function shift(v, delta) { const d = new Date(v.y, v.m + delta, 1); return { y: d.getFullYear(), m: d.getMonth() }; }
 
 /* =========================================================
+   RESUMO SEMANAL (independente do mês navegado nos KPIs/gráficos)
+   Semana = segunda a domingo, sempre relativa a hoje.
+   ========================================================= */
+function mondayOf(date) {
+  const d = new Date(date);
+  const diff = (d.getDay() + 6) % 7; // segunda = 0
+  d.setDate(d.getDate() - diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+function weekRangeOffset(offsetWeeks) {
+  const mon = mondayOf(new Date());
+  mon.setDate(mon.getDate() + 7 * offsetWeeks);
+  const sun = new Date(mon); sun.setDate(sun.getDate() + 6);
+  return { start: keyDate(mon), end: keyDate(sun) };
+}
+function sumWeek(list, start, end) {
+  let revenue = 0, done = 0;
+  for (const a of list) {
+    if (a.status === 'concluido' && a.data >= start && a.data <= end) {
+      revenue += +a.preco || 0; done++;
+    }
+  }
+  return { revenue, done };
+}
+function weekDeltaHTML(cur, prev) {
+  const note = t => `<span class="delta-note">${t}</span>`;
+  if (!prev) return cur ? note('sem semana anterior para comparar') : '';
+  const p = (cur - prev) / prev * 100;
+  if (Math.abs(p) < 0.5) return `<span class="delta flat">${svg('flat', 12, 2.25)}0%</span>${note('igual à semana anterior')}`;
+  const up = p > 0;
+  return `<span class="delta ${up ? 'up' : 'down'}">${svg(up ? 'up' : 'down', 12, 2.25)}${Math.abs(p).toFixed(0)}%</span>${note('vs semana anterior')}`;
+}
+function renderWeekSummary() {
+  if (!$('weekSummary')) return;
+  const cur = weekRangeOffset(0), prev = weekRangeOffset(-1);
+  const curSum = sumWeek(all, cur.start, cur.end);
+  const prevSum = sumWeek(all, prev.start, prev.end);
+  $('weekRange').textContent = `${br(cur.start)} – ${br(cur.end)}`;
+  $('wRevenue').dataset.fmt = 'money';
+  countTo($('wRevenue'), curSum.revenue);
+  countTo($('wDone'), curSum.done);
+  $('wRevenueDelta').innerHTML = weekDeltaHTML(curSum.revenue, prevSum.revenue);
+  $('wDoneDelta').innerHTML = weekDeltaHTML(curSum.done, prevSum.done);
+}
+
+/* =========================================================
    AGREGAÇÃO (função pura — recebe a lista e devolve os números)
    Regras:
    - Faturamento = soma do preço dos agendamentos "concluido"
@@ -420,6 +467,7 @@ function startRealtime() {
     ready = true;
     $('dash').classList.remove('is-loading');
     render();
+    renderWeekSummary();
     setLive(!snap.metadata.fromCache, snap.metadata.fromCache
       ? 'Sem conexão — exibindo dados salvos'
       : 'Ao vivo · atualizado às ' + new Date().toLocaleTimeString('pt-BR'));

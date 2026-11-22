@@ -58,6 +58,28 @@
       </div>
     </div>
 
+    <!-- Resumo semanal (independente do mês selecionado acima) -->
+    <article class="card week-summary" id="weekSummary">
+      <div class="week-summary-top">
+        <div>
+          <span class="eyebrow">Resumo da semana</span>
+          <span class="week-range" id="weekRange">—</span>
+        </div>
+      </div>
+      <div class="week-stats">
+        <div class="week-stat">
+          <b id="wRevenue">R$ 0,00</b>
+          <span>Faturamento da semana</span>
+          <small id="wRevenueDelta"></small>
+        </div>
+        <div class="week-stat">
+          <b id="wDone">0</b>
+          <span>Atendimentos concluídos</span>
+          <small id="wDoneDelta"></small>
+        </div>
+      </div>
+    </article>
+
     <!-- Indicadores (gerados pelo dashboard.js) -->
     <div class="kpi-grid" id="kpis"></div>
 
