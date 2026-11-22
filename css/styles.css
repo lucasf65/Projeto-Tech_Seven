@@ -1175,3 +1175,70 @@ main.page-enter {
   box-shadow: 0 4px 12px rgba(0,0,0,0.2);
   border-radius: 50%; /* Mantém redondo */
 }
+/* =========================================================
+   AGENDAMENTO — LAYOUT E RESPONSIVIDADE MOBILE
+   (o estilo inline antigo na grade anulava a media query)
+   ========================================================= */
+.booking-grid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,.8fr);gap:22px;align-items:start}
+.booking-main{min-width:0}
+.service > span:nth-child(2){flex:1 1 auto;min-width:0;overflow-wrap:anywhere}
+
+@media(max-width:900px){
+  .booking-grid{grid-template-columns:minmax(0,1fr);gap:16px}
+  /* cards viram itens da mesma grade para o resumo vir antes do PIX */
+  .booking-main{display:contents}
+  .booking-grid .card{margin-top:0}
+  .b-service{order:1}
+  .b-date{order:2}
+  .b-data{order:3}
+  .b-summary{order:4}
+  .b-pix{order:5}
+}
+
+@media(max-width:640px){
+  .booking-grid .card{padding:18px}
+  .booking-grid .summary{padding:18px}
+
+  /* etapas em linha única, com rolagem lateral */
+  .steps{flex-wrap:nowrap;overflow-x:auto;margin:0 -18px 20px;padding:0 18px 4px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .steps::-webkit-scrollbar{display:none}
+  .step-pill{flex:0 0 auto;white-space:nowrap;padding:8px 12px;letter-spacing:.08em}
+
+  /* serviços */
+  .service{padding:14px;gap:12px}
+  .service .icon{width:40px;height:40px;font-size:18px}
+  .service strong{font-size:17px}
+  .service .price{font-size:18px}
+
+  /* calendário ocupa toda a largura do card */
+  .custom-calendar{max-width:none;padding:14px}
+  .cal-header{gap:6px}
+  .cal-title{flex:1;min-width:0;justify-content:center;gap:6px}
+  .cal-title select{min-width:0;min-height:40px;padding:8px;font-size:14px}
+  .cal-nav{width:40px;height:40px;flex:none}
+  .cal-weekdays{font-size:9px}
+  .cal-day{height:40px;font-size:14px}
+
+  /* horários: 3 por linha, alvos de toque maiores */
+  .slots{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .slot{min-height:48px}
+
+  /* 16px evita o zoom automático do iOS ao focar nos campos */
+  .booking-grid .field input,.booking-grid .field select{font-size:16px}
+
+  .summary dd{font-size:16px}
+  .pix-box{padding:18px}
+  .pix-qr{width:150px;height:150px}
+  .pix-key{font-size:13px}
+}
+
+/* sem hover em telas de toque: evita o dia "grudar" ampliado */
+@media(hover:none){
+  .cal-day:hover:not(.selected){transform:none;background:transparent}
+  .service:hover{transform:none}
+}
+
+/* ============ VALIDAÇÃO DE FORMULÁRIOS ============ */
+.field-error{display:block;color:var(--bad);font-size:12px;line-height:1.4}
+.field-error[hidden]{display:none}
+.field input.invalid,.field select.invalid{border-color:var(--bad);box-shadow:0 0 0 3px #9651541a}

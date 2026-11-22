@@ -45,9 +45,9 @@
       </div>
     </div>
 
-    <div class="admin-grid" style="grid-template-columns:1.4fr .8fr">
-      <div>
-        <article class="card">
+    <div class="booking-grid">
+      <div class="booking-main">
+        <article class="card b-service">
           <div class="steps" id="stepsPills">
             <span class="step-pill active" data-step="1">1 · Serviço</span>
             <span class="step-pill" data-step="2">2 · Data e horário</span>
@@ -58,7 +58,7 @@
           <div class="service-list" id="services" style="margin-top:16px"></div>
         </article>
 
-        <article class="card mt-6">
+        <article class="card mt-6 b-date">
           <h3>Escolha a data e o horário</h3>
 
           <!-- Calendário Mensal -->
@@ -84,19 +84,20 @@
           <div class="slots" id="slots"></div>
         </article>
 
-        <article class="card mt-6">
+        <article class="card mt-6 b-data">
           <h3>Seus dados</h3>
           <div class="field-row" style="margin-top:16px">
-            <div class="field"><label for="name">Nome</label><input id="name" autocomplete="name" placeholder="Como podemos chamar você?"></div>
-            <div class="field"><label for="phone">WhatsApp</label><input id="phone" autocomplete="tel" inputmode="numeric" maxlength="15" placeholder="(11) 99999-9999"></div>
+            <div class="field"><label for="name">Nome</label><input id="name" autocomplete="name" maxlength="80" aria-describedby="nameErr" placeholder="Como podemos chamar você?"><small class="field-error" id="nameErr" role="alert" hidden></small></div>
+            <div class="field"><label for="phone">WhatsApp</label><input id="phone" autocomplete="tel" inputmode="numeric" maxlength="15" aria-describedby="phoneErr" placeholder="(11) 99999-9999"><small class="field-error" id="phoneErr" role="alert" hidden></small></div>
           </div>
           <div class="field" style="display:flex;gap:10px;align-items:flex-start">
             <input id="privacy" type="checkbox" style="width:auto;margin-top:4px">
             <label for="privacy" style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;font-size:13px;margin:0">Autorizo o uso destes dados exclusivamente para este agendamento.</label>
           </div>
+          <small class="field-error" id="privacyErr" role="alert" hidden></small>
         </article>
 
-        <article class="card mt-6" id="pixCard">
+        <article class="card mt-6 b-pix" id="pixCard">
           <h3>Pagamento do sinal</h3>
           <p class="lead" style="font-size:13px">O sinal de <b>R$ 30,00</b> garante a reserva do seu horário. Após realizar o pagamento, clique em <em>Já realizei o pagamento</em> — Carol confirmará o agendamento em seguida.</p>
           <div class="pix-box mt-4">
@@ -112,7 +113,7 @@
         </article>
       </div>
 
-      <aside class="card summary">
+      <aside class="card summary b-summary">
         <span class="eyebrow">Resumo</span>
         <h2 style="font-size:28px">Está quase tudo pronto!</h2>
         <dl>

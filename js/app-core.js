@@ -40,6 +40,32 @@ function toast(msg){
   clearTimeout(window.__tt); window.__tt=setTimeout(()=>el.classList.remove('show'),3200);
 }
 
+/* ===== Validação ===== */
+const NAME_RE = /^\p{L}[\p{L}\s'’.\-]*$/u;
+const DDD_RE = /^(1[1-9]|2[12478]|3[1-578]|4[1-9]|5[1345]|6[1-9]|7[134579]|8[1-9]|9[1-9])/;
+function cleanName(s){return (s||'').replace(/\s+/g,' ').trim();}
+function validName(s){
+  s=cleanName(s);
+  return s.length>=2 && s.length<=80 && NAME_RE.test(s) && (s.match(/\p{L}/gu)||[]).length>=2;
+}
+/* WhatsApp para agendar: DDD válido + 9 + 8 dígitos (11 dígitos) */
+function validPhone(p){ p=digits(p); return /^[1-9]\d9\d{8}$/.test(p) && DDD_RE.test(p); }
+/* Consulta: aceita também números antigos de 10 dígitos */
+function validPhoneLookup(p){ p=digits(p); return (p.length===10||p.length===11) && DDD_RE.test(p); }
+function validHttpsUrl(u){
+  try{ const x=new URL(u); return x.protocol==='https:' && x.hostname.includes('.'); }
+  catch(e){ return false; }
+}
+function validEmail(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e||''); }
+/* Mostra/limpa a mensagem de erro de um campo (errId = id do <small class="field-error">) */
+function setFieldError(input,msg,errId){
+  if(!input) return;
+  input.classList.toggle('invalid',!!msg);
+  if(msg) input.setAttribute('aria-invalid','true'); else input.removeAttribute('aria-invalid');
+  const err=document.getElementById(errId);
+  if(err){ err.textContent=msg||''; err.hidden=!msg; }
+}
+
 /* ===== Dados ===== */
 async function loadServices(){
   const snap = await db.collection('servicos').orderBy('id').get();

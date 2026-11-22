@@ -1,29 +1,141 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    function isAdmin(){ return exists(/databases/$(database)/documents/admins/$(request.auth.uid)); }
 
-    match /servicos/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /disponibilidades/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /galeria/{id} { allow read: if true; allow write: if isAdmin(); }
+    /* ---------- Auxiliares ---------- */
 
+    function isAdmin() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    function validSlot(h) {
+      return h in ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00'];
+    }
+
+    // Nome: texto de 2 a 80 caracteres, sem números nem sinais de tag
+    function validName(n) {
+      return n is string
+        && n.size() >= 2 && n.size() <= 80
+        && !n.matches('.*[0-9<>].*');
+    }
+
+    // WhatsApp: 11 dígitos (DDD + 9 + 8 dígitos), somente números
+    function validPhone(t) {
+      return t is string && t.matches('^[1-9][0-9]9[0-9]{8}$');
+    }
+
+    // Data AAAA-MM-DD, de ontem (folga de fuso) até 1 ano à frente
+    function dateInRange(p) {
+      return timestamp.date(int(p[0]), int(p[1]), int(p[2])) >= request.time - duration.value(1, 'd')
+        && timestamp.date(int(p[0]), int(p[1]), int(p[2])) <= request.time + duration.value(366, 'd');
+    }
+
+    function validDate(d) {
+      return d is string
+        && d.matches('^20[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$')
+        && dateInRange(d.split('-'));
+    }
+
+    function servicoPath(id) {
+      return /databases/$(database)/documents/servicos/$(string(id));
+    }
+
+    // Novo agendamento vindo do site (sem login)
+    function validNewAppointment(d) {
+      return d.keys().hasOnly([
+          'clienteId', 'nome', 'telefone', 'servico', 'servicoId', 'preco',
+          'data', 'horario', 'status', 'deposito', 'reagendamentos', 'isLoyal', 'criadoEm'
+        ])
+        && d.keys().hasAll([
+          'clienteId', 'nome', 'telefone', 'servico', 'servicoId', 'preco',
+          'data', 'horario', 'status', 'deposito', 'reagendamentos', 'isLoyal', 'criadoEm'
+        ])
+        && validName(d.nome)
+        && validPhone(d.telefone)
+        && d.clienteId == d.telefone
+        && d.servicoId is int
+        && exists(servicoPath(d.servicoId))
+        && d.servico == get(servicoPath(d.servicoId)).data.name
+        && d.preco == get(servicoPath(d.servicoId)).data.price
+        && validDate(d.data)
+        && validSlot(d.horario)
+        && d.status == 'pendente'
+        && d.deposito == 'pendente'
+        && d.reagendamentos == 0
+        && d.isLoyal == false
+        && d.criadoEm == request.time;
+    }
+
+    // Cliente cancela ou reagenda o próprio agendamento (só mexe em 3 campos)
+    function clientCancel() {
+      return resource.data.status in ['pendente', 'aguardando-sinal', 'confirmado']
+        && request.resource.data.status == 'cancelado'
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['status', 'canceladoPor', 'reagendamentos'])
+        && (
+          (request.resource.data.canceladoPor == 'cliente'
+            && request.resource.data.get('reagendamentos', 0) == resource.data.get('reagendamentos', 0))
+          ||
+          (request.resource.data.canceladoPor == 'reagendamento'
+            && request.resource.data.get('reagendamentos', 0) == resource.data.get('reagendamentos', 0) + 1
+            && request.resource.data.get('reagendamentos', 0) <= 3)
+        );
+    }
+
+    // Cliente avisa que pagou o sinal (só mexe em 3 campos)
+    function clientPixPaid() {
+      return resource.data.status in ['pendente', 'aguardando-sinal']
+        && resource.data.deposito == 'pendente'
+        && request.resource.data.deposito == 'pago'
+        && request.resource.data.pixStatus == 'pago'
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['deposito', 'pixStatus', 'pixPagoEm']);
+    }
+
+    /* ---------- Coleções ---------- */
+
+    match /servicos/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /disponibilidades/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /galeria/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // O id do documento é o telefone. Criar um cadastro que já existe é uma
+    // atualização, então a cliente não consegue sobrescrever dados de ninguém.
     match /clientes/{id} {
-      allow create: if request.resource.data.telefone is string;
-      allow read, update: if isAdmin();
+      allow create: if request.resource.data.keys().hasOnly(['nome', 'telefone', 'criadoEm'])
+                    && request.resource.data.keys().hasAll(['nome', 'telefone', 'criadoEm'])
+                    && validName(request.resource.data.nome)
+                    && validPhone(request.resource.data.telefone)
+                    && id == request.resource.data.telefone
+                    && request.resource.data.criadoEm == request.time;
+      allow read, update, delete: if isAdmin();
     }
 
     match /agendamentos/{id} {
-      allow create: if request.resource.data.status == 'pendente'
-                    && request.resource.data.telefone is string;
+      allow create: if validNewAppointment(request.resource.data);
+
+      // ATENÇÃO: leitura pública ainda necessária para "Meus horários" e para
+      // checar horários ocupados. Ver proposta de leitura restrita (pendente).
       allow read: if true;
-      allow update: if isAdmin()
-        || (request.resource.data.status == 'cancelado'
-            && resource.data.status in ['pendente','aguardando-sinal','confirmado'])
-        || (request.resource.data.deposito == 'pago'
-            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['deposito','pixStatus','pixPagoEm']));
+
+      allow update: if isAdmin() || clientCancel() || clientPixPaid();
       allow delete: if isAdmin();
     }
 
-    match /admins/{uid} { allow read: if request.auth.uid == uid; allow write: if false; }
+    match /admins/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false;
+    }
   }
 }

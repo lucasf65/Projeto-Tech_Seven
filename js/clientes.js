@@ -44,7 +44,15 @@ async function init() {
   renderPlaceholder();
   try {
     const [cs, ag] = await Promise.all([db.collection('clientes').get(), db.collection('agendamentos').get()]);
-    clientes = cs.docs.map(d => ({ id: d.id, ...d.data() }));
+    // Agrupa cadastros duplicados pelo telefone (cadastros antigos tinham id aleatório; os novos usam o telefone como id)
+    const byPhone = new Map();
+    cs.docs.forEach(d => {
+      const c = { id: d.id, ...d.data() };
+      const k = c.telefone || c.id;
+      if (byPhone.has(k)) byPhone.get(k)._ids.push(c.id);
+      else byPhone.set(k, { ...c, _ids: [c.id] });
+    });
+    clientes = [...byPhone.values()];
     agendamentos = ag.docs.map(d => ({ id: d.id, ...d.data() }));
     enriched = clientes.map(enrich);
     renderKpis();
@@ -221,7 +229,7 @@ function renderDetail(e) {
     });
     if (!okC) return;
     try {
-      await db.collection('clientes').doc(c.id).delete();
+      for (const cid of (c._ids || [c.id])) await db.collection('clientes').doc(cid).delete();
       clientes = clientes.filter(x => x.id !== c.id);
       enriched = enriched.filter(x => x.c.id !== c.id);
       selectedId = null;

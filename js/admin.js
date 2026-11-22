@@ -11,7 +11,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('adminLoginBtn').addEventListener('click', () => {
     const email = document.getElementById('adminEmail').value.trim();
     const pass = document.getElementById('adminPassword').value;
-    if (email && pass) adminLogin(email, pass); else toast('Preencha email e senha.');
+    if (!email || !pass) return toast('Preencha e-mail e senha.');
+    if (!validEmail(email)) return toast('Informe um e-mail válido.');
+    adminLogin(email, pass);
   });
 
   document.getElementById('adminLogout').addEventListener('click', adminLogout);
@@ -103,12 +105,19 @@ function initServiceModal() {
 
   document.getElementById('saveNewService').addEventListener('click', async () => {
     const saveBtn = document.getElementById('saveNewService');
-    const name = document.getElementById('newServiceName').value.trim();
+    const name = document.getElementById('newServiceName').value.trim().replace(/\s+/g, ' ');
     const desc = document.getElementById('newServiceDesc').value.trim();
-    const duration = formatDuration();
-    const price = Math.max(0, +document.getElementById('newServicePrice').value || 30);
+    const hrs = parseInt(document.getElementById('newServiceHours').value) || 0;
+    const mins = parseInt(document.getElementById('newServiceMins').value) || 0;
+    const priceRaw = document.getElementById('newServicePrice').value;
+    const price = +priceRaw;
 
-    if (!name) return toast('Por favor, informe o nome do serviço.');
+    if (name.length < 2 || name.length > 60) return toast('O nome do serviço deve ter de 2 a 60 caracteres.');
+    if (desc.length > 120) return toast('A descrição pode ter até 120 caracteres.');
+    if (hrs < 0 || hrs > 12 || mins < 0 || mins > 59) return toast('Duração inválida: horas de 0 a 12 e minutos de 0 a 59.');
+    if (hrs === 0 && mins === 0) return toast('Informe a duração do serviço.');
+    if (priceRaw === '' || !isFinite(price) || price < 0 || price > 10000) return toast('Informe um preço válido (de R$ 0 a R$ 10.000).');
+    const duration = formatDuration();
 
     try {
       saveBtn.disabled = true;
@@ -338,7 +347,7 @@ async function renderAdminAppointments() {
 async function approveAppointment(id) {
   try {
     const d = await db.collection('agendamentos').doc(id).get(); const a = d.data();
-    const snap = await db.collection('agendamentos').where('clienteId', '==', a.clienteId)
+    const snap = await db.collection('agendamentos').where('telefone', '==', a.telefone)
       .where('status', 'in', ['confirmado', 'concluido']).get();
     if (!snap.empty) await updateAppointment(id, { status: 'confirmado', deposito: 'nao-aplicavel', isLoyal: true }, 'Aprovado — cliente fidelizada.');
     else await updateAppointment(id, { status: 'aguardando-sinal', deposito: 'pendente', isLoyal: false }, 'Aprovado! Combine o sinal.');
@@ -374,12 +383,25 @@ async function renderAdminServices() {
 
       row.querySelectorAll('input').forEach(inp => {
         inp.addEventListener('change', async () => {
+          const field = inp.dataset.field;
+          let v = inp.value.trim();
+          let err = '';
+          if (field === 'price') {
+            const n = +inp.value;
+            if (inp.value === '' || !isFinite(n) || n < 0 || n > 10000) err = 'Preço inválido (de R$ 0 a R$ 10.000).';
+            else v = n;
+          } else if (field === 'name') {
+            v = v.replace(/\s+/g, ' ');
+            if (v.length < 2 || v.length > 60) err = 'O nome deve ter de 2 a 60 caracteres.';
+          } else if (field === 'duration') {
+            if (v.length < 1 || v.length > 20) err = 'Informe a duração (ex.: 1h 30 min).';
+          }
+          if (err) { inp.value = s[field]; return toast(err); }
           try {
-            let v = inp.value;
-            if (inp.dataset.field === 'price') v = Math.max(0, +v || 0);
-            await db.collection('servicos').doc(s.id.toString()).update({ [inp.dataset.field]: v });
+            await db.collection('servicos').doc(s.id.toString()).update({ [field]: v });
+            s[field] = v; inp.value = v;
             toast('Serviço atualizado!');
-          } catch(e) { console.error(e); toast('Erro ao atualizar serviço.'); }
+          } catch(e) { console.error(e); inp.value = s[field]; toast('Erro ao atualizar serviço.'); }
         });
       });
 
@@ -441,6 +463,8 @@ async function addGaleria() {
   const url = document.getElementById('galUrl').value.trim();
   const alt = document.getElementById('galAlt').value.trim();
   if (!url) return toast('Informe a URL da imagem.');
+  if (!validHttpsUrl(url)) return toast('Informe um endereço válido, começando com https://');
+  if (alt.length > 120) return toast('A descrição pode ter até 120 caracteres.');
 
   try {
     const snap = await db.collection('galeria').orderBy('ordem', 'desc').limit(1).get();

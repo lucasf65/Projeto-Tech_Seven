@@ -2,19 +2,29 @@
 const bookingState = { service: null, date: keyDate(new Date()), time: null, appointmentId: null };
 let servicesCache = [];
 let bookingCal = null;
+let submitting = false;
+const touched = { name: false, phone: false, privacy: false };
+
+const $el = (id) => document.getElementById(id);
 
 document.addEventListener('DOMContentLoaded', async () => {
-  if (!document.getElementById('services')) return;
-  document.getElementById('pixKey').textContent = PIX_KEY;
-  servicesCache = await loadServices();
+  if (!$el('services')) return;
+  $el('pixKey').textContent = PIX_KEY;
+
+  try {
+    servicesCache = await loadServices();
+  } catch (e) {
+    console.error(e);
+    toast('Não foi possível carregar os serviços. Atualize a página.');
+  }
   renderServices();
 
   bookingCal = createCalendar({
-    gridEl: document.getElementById('calendarGrid'),
-    monthSelectEl: document.getElementById('calMonth'),
-    yearSelectEl: document.getElementById('calYear'),
-    prevBtn: document.getElementById('prevMonth'),
-    nextBtn: document.getElementById('nextMonth'),
+    gridEl: $el('calendarGrid'),
+    monthSelectEl: $el('calMonth'),
+    yearSelectEl: $el('calYear'),
+    prevBtn: $el('prevMonth'),
+    nextBtn: $el('nextMonth'),
     disablePast: true,
     selectedDate: bookingState.date,
     onSelect: async (k) => {
@@ -29,33 +39,80 @@ document.addEventListener('DOMContentLoaded', async () => {
   await renderSlots();
   updateSummary();
 
-  document.getElementById('name').addEventListener('input', updateSummary);
-  document.getElementById('phone').addEventListener('input', e => { formatPhoneInput(e); updateSummary(); });
-  document.getElementById('privacy').addEventListener('change', updateSummary);
-  document.getElementById('request').addEventListener('click', submitAppointment);
-  document.getElementById('copyPix').addEventListener('click', () => {
+  $el('name').addEventListener('input', () => { updateSummary(); if (touched.name) showErrors(); });
+  $el('name').addEventListener('blur', () => { touched.name = true; showErrors(); });
+  $el('phone').addEventListener('input', e => { formatPhoneInput(e); updateSummary(); if (touched.phone) showErrors(); });
+  $el('phone').addEventListener('blur', () => { touched.phone = true; showErrors(); });
+  $el('privacy').addEventListener('change', () => { touched.privacy = true; updateSummary(); showErrors(); });
+  $el('request').addEventListener('click', submitAppointment);
+  $el('copyPix').addEventListener('click', () => {
     navigator.clipboard.writeText(PIX_KEY).then(() => toast('Chave PIX copiada!')).catch(() => toast('Copie manualmente: ' + PIX_KEY));
   });
-  document.getElementById('paidPix').addEventListener('click', markPixPaid);
+  $el('paidPix').addEventListener('click', markPixPaid);
 });
 
+/* ---------- Validação ---------- */
+function fieldStatus() {
+  const name = $el('name').value;
+  const phone = $el('phone').value;
+  return {
+    name: validName(name) ? '' : (cleanName(name) ? 'Use apenas letras (mínimo 2).' : 'Informe seu nome.'),
+    phone: validPhone(phone) ? '' : (digits(phone) ? 'Informe um WhatsApp válido com DDD, ex.: (11) 99999-9999.' : 'Informe seu WhatsApp.'),
+    privacy: $el('privacy').checked ? '' : 'É necessário autorizar o uso dos dados para agendar.'
+  };
+}
+
+function showErrors(all = false) {
+  const st = fieldStatus();
+  if (all || touched.name) setFieldError($el('name'), st.name, 'nameErr');
+  if (all || touched.phone) setFieldError($el('phone'), st.phone, 'phoneErr');
+  if (all || touched.privacy) setFieldError($el('privacy'), st.privacy, 'privacyErr');
+}
+
+function isPastSlot(date, time) {
+  const now = new Date();
+  if (date !== keyDate(now)) return false;
+  const hm = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+  return time <= hm;
+}
+
+function formIsValid() {
+  const st = fieldStatus();
+  return !!(bookingState.service && bookingState.date && bookingState.time
+    && bookingState.date >= keyDate(new Date())
+    && !st.name && !st.phone && !st.privacy);
+}
+
+/* ---------- Etapas ---------- */
 function setStep(n) {
   document.querySelectorAll('.step-pill').forEach(p => {
     const s = +p.dataset.step;
     p.classList.toggle('active', s === n);
     p.classList.toggle('done', s < n);
   });
+  // no celular as etapas rolam na horizontal: centraliza a etapa atual (sem mexer na rolagem da página)
+  const bar = $el('stepsPills');
+  const cur = bar && bar.querySelector('.step-pill.active');
+  if (cur && bar.scrollWidth > bar.clientWidth) {
+    const left = cur.getBoundingClientRect().left - bar.getBoundingClientRect().left + bar.scrollLeft;
+    bar.scrollTo({ left: left - (bar.clientWidth - cur.offsetWidth) / 2, behavior: 'smooth' });
+  }
 }
 
 function currentStep() {
   if (!bookingState.service) return 1;
   if (!bookingState.time) return 2;
-  if (!document.getElementById('name').value.trim() || digits(document.getElementById('phone').value).length < 10) return 3;
+  if (!validName($el('name').value) || !validPhone($el('phone').value)) return 3;
   return bookingState.appointmentId ? 4 : 3;
 }
 
+/* ---------- Serviços e horários ---------- */
 function renderServices() {
-  const r = document.getElementById('services');
+  const r = $el('services');
+  if (!servicesCache.length) {
+    r.innerHTML = '<div class="empty">Nenhum serviço disponível no momento.</div>';
+    return;
+  }
   r.innerHTML = servicesCache.map(s => `
     <button class="service${bookingState.service?.id === s.id ? ' selected' : ''}" data-id="${s.id}" type="button">
       <span class="icon">${esc(s.icon || '💅')}</span>
@@ -70,9 +127,9 @@ function renderServices() {
 }
 
 async function renderSlots() {
-  const r = document.getElementById('slots');
+  const r = $el('slots');
   r.innerHTML = '';
-  document.getElementById('chosenDate').textContent = 'Horários para ' + br(bookingState.date, true);
+  $el('chosenDate').textContent = 'Horários para ' + br(bookingState.date, true);
 
   let busy = [];
   let closed = [];
@@ -81,7 +138,7 @@ async function renderSlots() {
     busy = await Promise.all(SLOTS.map(t => isSlotBusy(bookingState.date, t)));
     closed = await Promise.all(SLOTS.map(t => isSlotClosed(bookingState.date, t)));
   } catch (error) {
-    console.error("Erro ao checar disponibilidade:", error);
+    console.error('Erro ao checar disponibilidade:', error);
     busy = SLOTS.map(() => false);
     closed = SLOTS.map(() => false);
   }
@@ -91,7 +148,7 @@ async function renderSlots() {
     b.type = 'button';
     b.className = 'slot' + (bookingState.time === t ? ' selected' : '');
     b.textContent = t;
-    b.disabled = busy[i] || closed[i];
+    b.disabled = busy[i] || closed[i] || isPastSlot(bookingState.date, t);
     b.addEventListener('click', () => {
       bookingState.time = t;
       renderSlots();
@@ -103,61 +160,97 @@ async function renderSlots() {
 }
 
 function updateSummary() {
-  document.getElementById('sService').textContent = bookingState.service?.name || '—';
-  document.getElementById('sDate').textContent = br(bookingState.date);
-  document.getElementById('sTime').textContent = bookingState.time || '—';
-  document.getElementById('sPrice').textContent = bookingState.service ? money(bookingState.service.price) : '—';
-  const name = document.getElementById('name').value.trim();
-  const phone = digits(document.getElementById('phone').value);
-  const ok = bookingState.service && bookingState.date && bookingState.time && name.length > 1 && phone.length >= 10 && document.getElementById('privacy').checked;
-  document.getElementById('request').disabled = !ok || !!bookingState.appointmentId;
+  $el('sService').textContent = bookingState.service?.name || '—';
+  $el('sDate').textContent = br(bookingState.date);
+  $el('sTime').textContent = bookingState.time || '—';
+  $el('sPrice').textContent = bookingState.service ? money(bookingState.service.price) : '—';
+  $el('request').disabled = submitting || !formIsValid() || !!bookingState.appointmentId;
   setStep(currentStep());
 }
 
+/* ---------- Envio ---------- */
 async function submitAppointment() {
-  if (await isSlotBusy(bookingState.date, bookingState.time) || await isSlotClosed(bookingState.date, bookingState.time)) {
-    toast('Esse horário não está mais disponível.'); return renderSlots();
+  if (submitting || bookingState.appointmentId) return;
+
+  const name = cleanName($el('name').value);
+  const phone = digits($el('phone').value);
+
+  // revalida tudo no envio, mesmo que o botão tenha sido habilitado por outro caminho
+  touched.name = touched.phone = touched.privacy = true;
+  showErrors(true);
+  if (!bookingState.service) { toast('Escolha o serviço.'); return; }
+  if (!bookingState.time) { toast('Escolha o horário.'); return; }
+  if (bookingState.date < keyDate(new Date())) { toast('Escolha uma data a partir de hoje.'); return; }
+  if (isPastSlot(bookingState.date, bookingState.time)) { toast('Esse horário já passou. Escolha outro.'); bookingState.time = null; renderSlots(); updateSummary(); return; }
+  if (!validName(name) || !validPhone(phone) || !$el('privacy').checked) { toast('Confira os campos destacados.'); return; }
+
+  const btn = $el('request');
+  submitting = true;
+  btn.disabled = true;
+  btn.textContent = 'Enviando…';
+
+  try {
+    if (await isSlotBusy(bookingState.date, bookingState.time) || await isSlotClosed(bookingState.date, bookingState.time)) {
+      toast('Esse horário não está mais disponível.');
+      bookingState.time = null;
+      await renderSlots();
+      return;
+    }
+
+    // Cadastro da cliente: o id do documento é o telefone. Se ela já existe, a regra do
+    // banco recusa a recriação (permission-denied) e seguimos normalmente.
+    try {
+      await db.collection('clientes').doc(phone).set({
+        nome: name, telefone: phone,
+        criadoEm: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    } catch (e) {
+      if (e.code !== 'permission-denied') throw e;
+    }
+
+    // Fidelização e sinal são definidos pela Carol ao aprovar a solicitação.
+    const ref = await db.collection('agendamentos').add({
+      clienteId: phone, nome: name, telefone: phone,
+      servico: bookingState.service.name, servicoId: bookingState.service.id,
+      preco: bookingState.service.price,
+      data: bookingState.date, horario: bookingState.time,
+      status: 'pendente',
+      deposito: 'pendente',
+      reagendamentos: 0, isLoyal: false,
+      criadoEm: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    bookingState.appointmentId = ref.id;
+    toast('Solicitação enviada! Agora pague o sinal de R$ 30.');
+    $el('pixHint').textContent = 'Pagamento liberado. Envie o comprovante pelo WhatsApp após pagar.';
+    $el('paidPix').disabled = false;
+    $el('statusNotice').innerHTML = 'Solicitação <b>pendente</b>. Após o sinal, a Carol confirma.';
+    renderSlots();
+    setStep(4);
+  } catch (e) {
+    console.error(e);
+    toast('Não foi possível enviar a solicitação. Tente novamente.');
+  } finally {
+    submitting = false;
+    btn.textContent = 'Enviar solicitação';
+    updateSummary();
   }
-  const name = document.getElementById('name').value.trim();
-  const phone = digits(document.getElementById('phone').value);
-
-  let clienteId;
-  const cs = await db.collection('clientes').where('telefone', '==', phone).get();
-  if (!cs.empty) clienteId = cs.docs[0].id;
-  else clienteId = (await db.collection('clientes').add({ nome: name, telefone: phone, criadoEm: firebase.firestore.FieldValue.serverTimestamp() })).id;
-
-  const historical = await db.collection('agendamentos').where('clienteId', '==', clienteId)
-    .where('status', 'in', ['confirmado', 'concluido']).get();
-  const isLoyal = !historical.empty;
-
-  const ref = await db.collection('agendamentos').add({
-    clienteId, nome: name, telefone: phone,
-    servico: bookingState.service.name, servicoId: bookingState.service.id,
-    preco: bookingState.service.price,
-    data: bookingState.date, horario: bookingState.time,
-    status: 'pendente',
-    deposito: isLoyal ? 'nao-aplicavel' : 'pendente',
-    reagendamentos: 0, isLoyal,
-    criadoEm: firebase.firestore.FieldValue.serverTimestamp()
-  });
-  bookingState.appointmentId = ref.id;
-  toast('Solicitação enviada! Agora pague o sinal de R$ 30.');
-  document.getElementById('request').disabled = true;
-  document.getElementById('pixHint').textContent = 'Pagamento liberado. Envie o comprovante pelo WhatsApp após pagar.';
-  document.getElementById('paidPix').disabled = false;
-  document.getElementById('statusNotice').innerHTML = 'Solicitação <b>pendente</b>. Após o sinal, a Carol confirma.';
-  renderSlots(); setStep(4);
 }
 
 async function markPixPaid() {
   if (!bookingState.appointmentId) return;
+  const btn = $el('paidPix');
+  btn.disabled = true;
   try {
     await db.collection('agendamentos').doc(bookingState.appointmentId).update({
       deposito: 'pago', pixStatus: 'pago',
       pixPagoEm: firebase.firestore.FieldValue.serverTimestamp()
     });
     toast('Recebemos seu aviso! A Carol vai confirmar em breve.');
-    document.getElementById('paidPix').disabled = true;
-    document.getElementById('pixHint').textContent = 'Aviso enviado. Aguarde a confirmação da Carol.';
-  } catch (e) { console.error(e); toast('Erro ao registrar pagamento.'); }
+    $el('pixHint').textContent = 'Aviso enviado. Aguarde a confirmação da Carol.';
+  } catch (e) {
+    console.error(e);
+    btn.disabled = false;
+    toast('Erro ao registrar pagamento.');
+  }
 }
