@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Agendamento — Nails by Nascimento</title>
+<meta name="description" content="Solicite seu horário no estúdio.">
+<link rel="icon" href="assets/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,500;1,700&family=Poppins:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<a class="booking-skip" href="#main-content">Pular para o agendamento</a>
+
+    <!-- Tela de Transição -->
+<div id="page-transition">
+  <img src="assets/logo.png" alt="Carregando..." onerror="this.style.display='none'">
+  <span>Nails by Nascimento</span>
+</div>
+
+<header class="site-header">
+  <div class="container nav-wrap">
+    <a class="brand" href="index.html"><img src="assets/logo.png" alt="" onerror="this.style.display='none'"><div class="brand-meta"><strong>Carol Nascimento</strong><span>Nails · Estúdio</span></div></a>
+    <button class="nav-toggle" aria-label="Abrir menu" aria-expanded="false"><span></span></button>
+    <nav class="nav-links" aria-label="Principal">
+      <a href="index.html">Início</a>
+      <a href="servicos.html">Serviços</a>
+      <a href="precos.html">Preços</a>
+      <a href="galeria.html">Galeria</a>
+      <a href="sobre.html">Sobre</a>
+      <a href="meus-horarios.html">Meus horários</a>
+    </nav>
+    <div class="nav-cta"><a class="btn btn-primary" href="agendamento.html" aria-current="page"><span>Agendar<span class="nav-cta-detail"> horário</span></span><span class="arrow" aria-hidden="true">→</span></a></div>
+  </div>
+</header>
+
+<main class="section booking-page" id="main-content" tabindex="-1">
+  <div class="container">
+    <div class="section-head" style="margin-bottom:32px">
+      <div>
+        <span class="eyebrow">Novo agendamento</span>
+        <h1 style="font-size:clamp(32px,4.4vw,52px);margin-top:12px">Vamos escolher o seu horário</h1>
+        <p class="lead" style="margin-top:10px">Preencha os campos em poucos passos, sem precisar criar uma senha.</p>
+      </div>
+    </div>
+
+    <noscript><p class="notice">Para solicitar um horário, ative o JavaScript ou fale com a Carol.</p></noscript>
+    <div class="notice booking-reschedule" id="rescheduleNotice" hidden>
+      <p>Você está escolhendo um novo horário. Seu horário atual continua válido até o envio da nova solicitação.</p>
+      <button type="button" class="btn btn-ghost mt-4" id="leaveReschedule">Fazer uma solicitação separada</button>
+    </div>
+    <form class="booking-grid" id="bookingForm" novalidate>
+      <section class="card b-service" aria-labelledby="serviceTitle">
+        <ol class="steps" id="stepsPills" aria-label="Etapas do agendamento">
+          <li class="step-pill active" data-step="1" aria-current="step">Serviço</li>
+          <li class="step-pill" data-step="2">Data e horário</li>
+          <li class="step-pill" data-step="3">Seus dados</li>
+          <li class="step-pill" data-step="4">Solicitação</li>
+        </ol>
+        <h2 id="serviceTitle" tabindex="-1">Qual serviço você deseja?</h2>
+        <p class="booking-feedback" id="servicesStatus" role="status" aria-atomic="true"></p>
+        <div class="service-list mt-4" id="services" role="group" aria-labelledby="serviceTitle"></div>
+        <button type="button" class="btn btn-ghost mt-4" id="retryServices" hidden>Tentar carregar serviços novamente</button>
+      </section>
+
+      <section class="card b-date" aria-labelledby="dateTitle">
+        <h2 id="dateTitle">Escolha a data e o horário</h2>
+        <div class="custom-calendar mt-4">
+          <div class="cal-header">
+            <button type="button" id="prevMonth" class="cal-nav" aria-label="Mês anterior">&#8249;</button>
+            <div class="cal-title">
+              <select id="calMonth" aria-label="Selecionar mês"></select>
+              <select id="calYear" aria-label="Selecionar ano"></select>
+            </div>
+            <button type="button" id="nextMonth" class="cal-nav" aria-label="Próximo mês">&#8250;</button>
+          </div>
+          <div class="cal-weekdays" aria-hidden="true">
+            <span>Dom</span><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span>
+          </div>
+          <div class="cal-grid" id="calendarGrid" role="group" aria-label="Dias do mês"></div>
+        </div>
+
+        <div class="booking-availability">
+          <h3 id="slotsTitle" tabindex="-1">Horários disponíveis</h3>
+          <p class="booking-feedback" id="chosenDate"></p>
+          <p class="booking-feedback" id="slotsStatus" role="status" aria-atomic="true"></p>
+          <div class="slots" id="slots" role="group" aria-labelledby="slotsTitle" aria-describedby="chosenDate"></div>
+          <button type="button" class="btn btn-ghost mt-4" id="retrySlots" hidden>Tentar consultar horários novamente</button>
+        </div>
+      </section>
+
+      <section class="card b-data" aria-labelledby="dataTitle">
+        <h2 id="dataTitle">Seus dados</h2>
+        <div class="field-row mt-4">
+          <div class="field">
+            <label for="name">Nome</label>
+            <input id="name" autocomplete="name" maxlength="80" aria-describedby="nameErr" required>
+            <small class="field-error" id="nameErr" hidden></small>
+          </div>
+          <div class="field">
+            <label for="phone">WhatsApp com DDD</label>
+            <input id="phone" type="tel" autocomplete="tel" maxlength="24" aria-describedby="phoneErr" placeholder="(11) 99999-9999" required>
+            <small class="field-error" id="phoneErr" hidden></small>
+          </div>
+        </div>
+        <div class="booking-consent">
+          <input id="privacy" type="checkbox" aria-describedby="privacyErr" required>
+          <label for="privacy">Autorizo o uso destes dados para este agendamento.</label>
+        </div>
+        <small class="field-error" id="privacyErr" hidden></small>
+      </section>
+
+      <section class="card summary b-summary" aria-labelledby="summaryTitle">
+        <h2 id="summaryTitle">Resumo da solicitação</h2>
+        <dl>
+          <div><dt>Serviço</dt><dd id="sService">—</dd></div>
+          <div><dt>Data</dt><dd id="sDate">—</dd></div>
+          <div><dt>Horário</dt><dd id="sTime">—</dd></div>
+          <div><dt>Valor</dt><dd id="sPrice">—</dd></div>
+          <div><dt>Sinal</dt><dd id="sSinal">R$ 30,00</dd></div>
+        </dl>
+        <p class="notice" id="statusNotice" tabindex="-1" role="status" aria-atomic="true">A Carol vai analisar a solicitação antes de confirmar seu horário.</p>
+        <div id="bookingReference" class="booking-reference mt-4" hidden>
+          <p><strong>Código da solicitação</strong></p>
+          <p><code id="referenceCode"></code></p>
+          <p>Guarde este código. Você vai precisar dele e do seu WhatsApp para consultar o horário.</p>
+          <button type="button" class="btn btn-ghost btn-block mt-4" id="copyReference">Copiar código</button>
+          <a class="btn btn-ghost btn-block mt-4" href="meus-horarios.html">Ir para Meus horários</a>
+        </div>
+        <p class="booking-feedback" id="requestError" role="alert" aria-atomic="true"></p>
+        <button id="request" type="submit" class="btn btn-primary btn-block mt-4" disabled>Enviar solicitação</button>
+      </section>
+
+      <section class="card b-pix" id="pixCard" aria-labelledby="pixTitle" hidden>
+        <h2 id="pixTitle">Pagamento do sinal</h2>
+        <p class="booking-feedback" id="pixHint" role="status" aria-atomic="true"></p>
+        <div class="pix-box mt-4" id="pixDetails" hidden>
+          <strong>Chave Pix</strong>
+          <p class="pix-key" id="pixKey"></p>
+          <button type="button" class="btn btn-ghost" id="copyPix">Copiar chave Pix</button>
+        </div>
+        <button type="button" id="paidPix" class="btn btn-primary btn-block mt-4" hidden>Informar pagamento</button>
+        <p class="booking-feedback" id="pixError" role="alert" aria-atomic="true"></p>
+      </section>
+    </form>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div><div class="footer-brand">Nails by Nascimento<small>Manicure & Nail Design</small></div><p style="margin-top:16px">Estúdio de manicure com atendimento personalizado e hora marcada.</p></div>
+    <div><h4>Navegar</h4><p><a href="servicos.html">Serviços</a></p><p><a href="precos.html">Preços</a></p><p><a href="sobre.html">Sobre</a></p><p><a href="galeria.html">Galeria</a></p></div>
+    <div><h4>Cliente</h4><p><a href="agendamento.html">Agendar horário</a></p><p><a href="meus-horarios.html">Meus horários</a></p><p><a id="waLink" href="#" target="_blank" rel="noopener">WhatsApp</a></p></div>
+    <div><h4>Estúdio</h4><p>Atendimento com hora marcada</p><p>Segunda a sábado · das 9h às 19h</p><p><a href="admin.html">Área da Carol</a></p></div>
+  </div>
+  <div class="container footer-bottom"><span>© <span id="year"></span> Nails by Nascimento</span><span>Feito com carinho</span></div>
+</footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="js/app-core.js"></script>
+<script src="js/calendar.js"></script>
+<script src="js/booking.js"></script>
+</body>
+</html>

@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Área da Carol — Nails by Nascimento</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="assets/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/admin-agenda.css">
+</head>
+<body>
+
+<!-- Tela de Transição -->
+<div id="page-transition">
+  <img src="assets/logo.png" alt="Carregando..." onerror="this.style.display='none'">
+  <span>Nails by Nascimento</span>
+</div>
+
+<header class="site-header">
+  <div class="container nav-wrap">
+    <a class="brand" href="index.html"><img src="assets/logo.png" alt="" onerror="this.style.display='none'"><div class="brand-meta"><strong>Carol Nascimento</strong><span>Nails · Estúdio</span></div></a>
+    <button class="nav-toggle" aria-label="Abrir menu" aria-expanded="false"><span></span></button>
+    <nav class="nav-links" aria-label="Principal">
+      <a href="index.html">Início</a>
+      <a href="servicos.html">Serviços</a>
+      <a href="precos.html">Preços</a>
+      <a href="galeria.html">Galeria</a>
+      <a href="sobre.html">Sobre</a>
+      <a href="meus-horarios.html">Meus horários</a>
+    </nav>
+    <div class="nav-cta"><a class="btn btn-primary" href="agendamento.html"><span>Agendar<span class="nav-cta-detail"> horário</span></span><span class="arrow" aria-hidden="true">→</span></a></div>
+  </div>
+</header>
+
+<main class="section">
+  <div class="container">
+    <!-- Login -->
+    <div id="adminLogin" class="card admin-login-wrap">
+      <span class="eyebrow">Área administrativa</span>
+      <h2>Login da Carol</h2>
+      <p class="lead" style="font-size:13px">Entre usando suas credenciais do Firebase.</p>
+      <div class="field" style="margin-top:22px"><label for="adminEmail">E-mail</label><input id="adminEmail" type="email" placeholder="seu-email@exemplo.com"></div>
+      <div class="field"><label for="adminPassword">Senha</label><input id="adminPassword" type="password" placeholder="••••••••"></div>
+      <button id="adminLoginBtn" class="btn btn-primary btn-block mt-4">Acessar o painel</button>
+    </div>
+
+    <!-- Painel -->
+    <div id="adminPanel" class="hidden">
+      <div class="section-head" style="margin-bottom:26px">
+        <div>
+          <span class="eyebrow">Painel</span>
+          <h1 style="font-size:clamp(32px,4.4vw,52px);margin-top:12px">Olá, Carol</h1>
+          <p class="lead" style="margin-top:8px">Gerencie os agendamentos, a agenda e os serviços cadastrados.</p>
+        </div>
+        <button id="adminLogout" class="btn btn-ghost">Sair</button>
+      </div>
+      
+      <div id="stats" class="stat-grid"></div>
+      
+      <div class="admin-grid-advanced">
+        <!-- Coluna Esquerda: Agenda -->
+        <div>
+          <article class="card">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px;">
+              <div>
+                <span class="eyebrow">Agenda</span>
+                <h2 style="font-size:28px;margin-top:6px">Solicitações</h2>
+              </div>
+              <div class="admin-toolbar" style="margin:0;">
+                <select id="statusFilter" aria-label="Filtrar pelo status">
+                  <option value="all">Todos os status</option>
+                  <option value="pendente">Pendentes</option>
+                  <option value="aguardando-sinal">Aguardando sinal</option>
+                  <option value="confirmado">Confirmados</option>
+                  <option value="concluido">Concluídos</option>
+                  <option value="recusado">Recusados</option>
+                  <option value="cancelado">Cancelados</option>
+                </select>
+                <select id="dateFilter" aria-label="Filtrar pela data"><option value="all">Todas as datas</option></select>
+              </div>
+            </div>
+            <p id="adminAppointmentStatus" class="admin-feedback" role="status"></p>
+            <div id="adminAppointments" style="margin-top:16px;"></div>
+          </article>
+        </div>
+
+        <!-- Coluna Direita: Ferramentas -->
+        <div>
+          <!-- Disponibilidade -->
+          <article class="card">
+            <span class="eyebrow">Disponibilidade</span>
+            <h2 style="font-size:24px;margin-top:6px">Gerenciar agenda</h2>
+            <p class="lead" style="font-size:13px;margin-top:6px">Defina o atendimento semanal e ajuste horários de uma data específica.</p>
+            
+            <button id="openAgendaModal" class="btn btn-primary btn-block mt-4">Abrir agenda</button>
+          </article>
+          
+          <!-- Catálogo -->
+          <article class="card mt-6">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+              <div>
+                <span class="eyebrow">Catálogo</span>
+                <h2 style="font-size:24px;margin-top:6px">Serviços e pacotes</h2>
+              </div>
+              <button id="openServiceModal" class="tiny go">+ Novo</button>
+            </div>
+            <div id="adminServices" aria-busy="true"></div>
+          </article>
+
+          <!-- Galeria -->
+          <article class="card mt-6">
+            <span class="eyebrow">Galeria</span>
+            <h2 style="font-size:24px;margin-top:6px">Fotos</h2>
+            <p class="lead" style="font-size:12px;margin-top:6px">Insira o endereço público da imagem e uma descrição.</p>
+            <div class="field mt-4"><input id="galUrl" placeholder="https://..."></div>
+            <div class="field"><input id="galAlt" placeholder="Descrição (ex.: alongamento em gel)"></div>
+            <button id="addGal" class="tiny mt-4">+ Adicionar foto</button>
+            <div id="adminGaleria" class="mt-4"></div>
+          </article>
+          
+          <!-- Relatório -->
+          <article class="card mt-6">
+            <span class="eyebrow">Relatório</span>
+            <h2 style="font-size:24px;margin-top:6px">Faturamento</h2>
+            <p class="lead" style="font-size:12px;margin-top:6px">Atendimentos concluídos: <b id="completedCount">0</b></p>
+            <p style="font-family:var(--font-display);font-size:36px;font-weight:600;margin:8px 0;color:var(--brand)" id="revenue">R$ 0,00</p>
+            <a class="btn btn-primary btn-block mt-4" href="dashboard.html">Ver dashboard <span class="arrow">→</span></a>
+          </article>
+
+          <!-- Clientes -->
+          <article class="card mt-6">
+            <span class="eyebrow">Histórico</span>
+            <h2 style="font-size:24px;margin-top:6px">Clientes</h2>
+            <p class="lead" style="font-size:12px;margin-top:6px">Busque uma cliente por nome ou WhatsApp e veja seus atendimentos, gastos e recorrência.</p>
+            <a class="btn btn-ghost btn-block mt-4" href="clientes.html">Ver clientes <span class="arrow">→</span></a>
+          </article>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div id="agendaModal" class="modal-agenda-overlay">
+  <div class="modal-agenda-content" role="dialog" aria-modal="true" aria-labelledby="agendaTitle">
+    
+    <!-- Cabeçalho do Modal -->
+    <div class="modal-header-custom">
+      <div>
+        <span class="eyebrow">Gestão</span>
+        <h2 id="agendaTitle">Horários de atendimento</h2>
+      </div>
+      <button type="button" class="close-modal-custom" id="closeAgendaModal" aria-label="Fechar agenda">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+
+    <div class="modal-agenda-body agenda-editor">
+      <!-- Bloco do Calendário -->
+      <div class="modal-calendar-box">
+        <div class="custom-calendar" style="padding: 0; border: none; box-shadow: none;">
+          <div class="cal-header" style="margin-bottom: 20px;">
+            <button type="button" id="adminPrevMonth" class="cal-nav-btn" aria-label="Mês anterior">&#8249;</button>
+            <div class="cal-title" style="font-family: var(--font-body); font-size: 15px; font-weight: 600;">
+              <span id="adminCalMonth"></span>
+              <span id="adminCalYear" style="margin-left: 6px;"></span>
+            </div>
+            <button type="button" id="adminNextMonth" class="cal-nav-btn" aria-label="Próximo mês">&#8250;</button>
+          </div>
+          <div class="cal-weekdays" style="margin-bottom: 10px;">
+            <span>D</span><span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span>
+          </div>
+          <div class="cal-grid" id="adminCalendarGrid"></div>
+        </div>
+      </div>
+
+      <div class="modal-slots-box">
+        <h3 id="modalSelectedDate">Ajustes por data</h3>
+        <p id="scheduleFeedback" class="admin-feedback" role="status"></p>
+        <button type="button" id="retrySchedule" class="tiny" hidden>Carregar novamente</button>
+        <form id="exceptionForm" hidden>
+          <p id="standardHours" class="admin-feedback"></p>
+          <div class="field">
+            <label for="exceptionMode">Atendimento nesta data</label>
+            <select id="exceptionMode">
+              <option value="regular">Usar os horários semanais</option>
+              <option value="special">Definir horários especiais</option>
+              <option value="closed">Fechar o dia</option>
+            </select>
+          </div>
+          <div id="specialHours" hidden>
+            <div id="exceptionWindows"></div>
+            <button type="button" class="tiny" id="addExceptionWindow">Adicionar período</button>
+          </div>
+          <fieldset id="blockedSlots">
+            <legend>Horários bloqueados nesta data</legend>
+            <div id="modalAvailability"></div>
+          </fieldset>
+          <p id="dayAppointments" class="admin-feedback"></p>
+          <p id="exceptionFeedback" class="admin-feedback" role="status"></p>
+          <button type="submit" class="btn btn-primary btn-block">Salvar ajustes da data</button>
+        </form>
+      </div>
+      <details id="weeklyEditor" class="modal-slots-box" hidden>
+        <summary>Horários semanais</summary>
+        <form id="weeklyForm">
+          <div id="weeklyHours"></div>
+          <p id="weeklyFeedback" class="admin-feedback" role="status"></p>
+          <button type="submit" class="btn btn-primary btn-block">Salvar horários semanais</button>
+        </form>
+      </details>
+    </div>
+    
+    <!-- Botão de Fechar Footer -->
+    <div class="modal-footer-custom">
+      <button type="button" class="btn btn-ghost btn-block" id="doneAgendaModal">Fechar agenda</button>
+    </div>
+    
+    <!-- Input oculto para guardar a data selecionada -->
+    <input type="hidden" id="availDate">
+  </div>
+</div>
+
+<div id="serviceModal" class="modal-overlay">
+  <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="serviceModalTitle">
+    <div class="modal-header">
+      <h3 id="serviceModalTitle">Novo item do catálogo</h3>
+      <button type="button" class="close-modal" aria-label="Fechar catálogo">&times;</button>
+    </div>
+    <form id="serviceForm">
+      <div class="field">
+        <label for="newServiceName">Nome</label>
+        <input id="newServiceName" minlength="2" maxlength="60" required autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="newServiceKind">Tipo</label>
+        <select id="newServiceKind">
+          <option value="servico">Serviço</option>
+          <option value="pacote">Pacote</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="newServiceDesc">Descrição breve</label>
+        <input id="newServiceDesc" maxlength="120" autocomplete="off">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="newServiceDuration">Duração</label>
+          <input id="newServiceDuration" placeholder="Ex. 1h 30 min" maxlength="20" required>
+        </div>
+        <div class="field">
+          <label for="newServicePrice">Preço (R$)</label>
+          <input id="newServicePrice" type="number" min="0" max="10000" step="0.01" required>
+        </div>
+      </div>
+      <div class="field">
+        <label for="newServiceIcon">Ícone</label>
+        <input id="newServiceIcon" maxlength="16" value="💅">
+      </div>
+      <p id="serviceFeedback" class="admin-feedback" role="status"></p>
+      <button id="saveNewService" type="submit" class="btn btn-primary btn-block">Salvar no catálogo</button>
+    </form>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div><div class="footer-brand">Nails by Nascimento<small>Manicure & Nail Design</small></div><p style="margin-top:16px">Estúdio de manicure com atendimento personalizado e hora marcada.</p></div>
+    <div><h4>Navegar</h4><p><a href="servicos.html">Serviços</a></p><p><a href="precos.html">Preços</a></p><p><a href="sobre.html">Sobre</a></p><p><a href="galeria.html">Galeria</a></p></div>
+    <div><h4>Cliente</h4><p><a href="agendamento.html">Agendar horário</a></p><p><a href="meus-horarios.html">Meus horários</a></p><p><a id="waLink" href="#" target="_blank" rel="noopener">WhatsApp</a></p></div>
+    <div><h4>Estúdio</h4><p>Atendimento com hora marcada</p><p>Segunda a sábado · das 9h às 19h</p><p><a href="admin.html">Área da Carol</a></p></div>
+  </div>
+  <div class="container footer-bottom"><span>© <span id="year"></span> Nails by Nascimento</span><span>Feito com carinho</span></div>
+</footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/app-core.js"></script>
+<script src="js/calendar.js"></script>
+<script src="js/modal.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>

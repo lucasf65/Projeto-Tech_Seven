@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dashboard — Área da Carol</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="assets/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+
+<!-- Tela de Transição -->
+<div id="page-transition">
+  <img src="assets/logo.png" alt="Carregando..." onerror="this.style.display='none'">
+  <span>Nails by Nascimento</span>
+</div>
+
+<header class="site-header">
+  <div class="container nav-wrap">
+    <a class="brand" href="index.html"><img src="assets/logo.png" alt="" onerror="this.style.display='none'"><div class="brand-meta"><strong>Carol Nascimento</strong><span>Nails · Estúdio</span></div></a>
+    <button class="nav-toggle" aria-label="Abrir menu" aria-expanded="false"><span></span></button>
+    <nav class="nav-links" aria-label="Principal">
+      <a href="index.html">Início</a>
+      <a href="servicos.html">Serviços</a>
+      <a href="precos.html">Preços</a>
+      <a href="galeria.html">Galeria</a>
+      <a href="sobre.html">Sobre</a>
+      <a href="meus-horarios.html">Meus horários</a>
+    </nav>
+    <div class="nav-cta"><a class="btn btn-primary" href="agendamento.html"><span>Agendar<span class="nav-cta-detail"> horário</span></span><span class="arrow" aria-hidden="true">→</span></a></div>
+  </div>
+</header>
+
+<main class="section dash is-loading" id="dash">
+  <div class="container">
+
+    <!-- Topo: título + controles -->
+    <div class="dash-top">
+      <div>
+        <span class="eyebrow">Dashboard</span>
+        <h1>Visão geral do estúdio</h1>
+        <p class="lead" style="margin-top:8px">Os números se atualizam sozinhos a cada movimento na agenda.</p>
+      </div>
+      <div class="dash-tools">
+        <span class="live off" id="live"><i></i><span id="liveText">Conectando…</span></span>
+        <div class="month-nav">
+          <button type="button" id="mPrev" aria-label="Mês anterior"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
+          <strong id="mLabel">—</strong>
+          <button type="button" id="mNext" aria-label="Próximo mês"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
+        </div>
+        <button type="button" class="btn btn-ghost" id="mToday">Mês atual</button>
+        <a class="btn btn-ghost" href="admin.html"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Painel</a>
+      </div>
+    </div>
+
+    <!-- Resumo semanal (independente do mês selecionado acima) -->
+    <article class="card week-summary" id="weekSummary">
+      <div class="week-summary-top">
+        <div>
+          <span class="eyebrow">Resumo da semana</span>
+          <span class="week-range" id="weekRange">—</span>
+        </div>
+      </div>
+      <div class="week-stats">
+        <div class="week-stat">
+          <b id="wRevenue">R$ 0,00</b>
+          <span>Faturamento da semana</span>
+          <small id="wRevenueDelta"></small>
+        </div>
+        <div class="week-stat">
+          <b id="wDone">0</b>
+          <span>Atendimentos concluídos</span>
+          <small id="wDoneDelta"></small>
+        </div>
+      </div>
+    </article>
+
+    <!-- Indicadores (gerados pelo dashboard.js) -->
+    <div class="kpi-grid" id="kpis"></div>
+
+    <!-- Gráficos -->
+    <div class="dash-grid">
+
+      <article class="card dash-card span-8">
+        <span class="eyebrow">Receita</span>
+        <h3>Faturamento por dia</h3>
+        <p class="sub">Receita dos atendimentos concluídos, dia a dia e acumulada no mês</p>
+        <div class="chart-box"><div id="cDaily" class="plot" role="img" aria-label="Faturamento por dia e acumulado do mês"></div></div>
+      </article>
+
+      <article class="card dash-card span-4">
+        <span class="eyebrow">Agenda</span>
+        <h3>Situação das solicitações</h3>
+        <p class="sub">Todas as solicitações do mês, por status</p>
+        <div class="chart-box sm"><div id="cStatus" class="plot" role="img" aria-label="Solicitações por status"></div></div>
+        <ul class="legend-list" id="statusLegend"></ul>
+      </article>
+
+      <article class="card dash-card span-4">
+        <span class="eyebrow">Tendência</span>
+        <h3>Últimos 6 meses</h3>
+        <p class="sub">Faturamento (barras) e atendimentos (linha)</p>
+        <div class="chart-box sm"><div id="cTrend" class="plot" role="img" aria-label="Faturamento e atendimentos dos últimos 6 meses"></div></div>
+      </article>
+
+      <article class="card dash-card span-4">
+        <span class="eyebrow">Catálogo</span>
+        <h3>Serviços mais realizados</h3>
+        <p class="sub">Atendimentos concluídos no mês</p>
+        <div class="chart-box sm"><div id="cServices" class="plot" role="img" aria-label="Serviços mais realizados"></div></div>
+      </article>
+
+      <article class="card dash-card span-4">
+        <span class="eyebrow">Ocorrências</span>
+        <h3>Reagendamentos e cancelamentos</h3>
+        <p class="sub">Por semana do mês · cancelamentos feitos pela Carol</p>
+        <div class="chart-box sm"><div id="cOcc" class="plot" role="img" aria-label="Reagendamentos e cancelamentos por semana"></div></div>
+      </article>
+
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div><div class="footer-brand">Nails by Nascimento<small>Manicure & Nail Design</small></div><p style="margin-top:16px">Estúdio de manicure com atendimento personalizado e hora marcada.</p></div>
+    <div><h4>Navegar</h4><p><a href="servicos.html">Serviços</a></p><p><a href="precos.html">Preços</a></p><p><a href="sobre.html">Sobre</a></p><p><a href="galeria.html">Galeria</a></p></div>
+    <div><h4>Cliente</h4><p><a href="agendamento.html">Agendar horário</a></p><p><a href="meus-horarios.html">Meus horários</a></p><p><a id="waLink" href="#" target="_blank" rel="noopener">WhatsApp</a></p></div>
+    <div><h4>Estúdio</h4><p>Atendimento com hora marcada</p><p>Segunda a sábado · das 9h às 19h</p><p><a href="admin.html">Área da Carol</a></p></div>
+  </div>
+  <div class="container footer-bottom"><span>© <span id="year"></span> Nails by Nascimento</span><span>Feito com carinho</span></div>
+</footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/app-core.js"></script>
+<script src="js/dashboard.js"></script>
+</body>
+</html>

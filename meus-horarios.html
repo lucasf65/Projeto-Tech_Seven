@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Meus horários — Nails by Nascimento</title>
+<meta name="description" content="Consulte seus agendamentos no estúdio.">
+<link rel="icon" href="assets/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<!-- Tela de Transição -->
+<div id="page-transition">
+  <img src="assets/logo.png" alt="Carregando..." onerror="this.style.display='none'">
+  <span>Nails by Nascimento</span>
+</div>
+
+<header class="site-header">
+  <div class="container nav-wrap">
+    <a class="brand" href="index.html"><img src="assets/logo.png" alt="" onerror="this.style.display='none'"><div class="brand-meta"><strong>Carol Nascimento</strong><span>Nails · Estúdio</span></div></a>
+    <button class="nav-toggle" aria-label="Abrir menu" aria-expanded="false"><span></span></button>
+    <nav class="nav-links" aria-label="Principal">
+      <a href="index.html">Início</a>
+      <a href="servicos.html">Serviços</a>
+      <a href="precos.html">Preços</a>
+      <a href="galeria.html">Galeria</a>
+      <a href="sobre.html">Sobre</a>
+      <a href="meus-horarios.html" aria-current="page">Meus horários</a>
+    </nav>
+    <div class="nav-cta"><a class="btn btn-primary" href="agendamento.html"><span>Agendar<span class="nav-cta-detail"> horário</span></span><span class="arrow" aria-hidden="true">→</span></a></div>
+  </div>
+</header>
+
+<main class="section">
+  <div class="container">
+    
+    <!-- Cabeçalho da página -->
+    <div class="section-head" style="margin-bottom:32px">
+      <div>
+        <span class="eyebrow">Acompanhe</span>
+        <h1 style="font-size:clamp(32px,4.4vw,52px);margin-top:12px">Meus horários</h1>
+        <p class="lead" style="margin-top:10px">Use o WhatsApp informado no agendamento e a referência que apareceu após o envio.</p>
+      </div>
+    </div>
+
+    <!-- Card de Busca -->
+    <article class="card" style="max-width:820px; padding:clamp(16px,4vw,32px)">
+      <form id="lookupForm" novalidate>
+        <div class="field">
+          <label for="lookup">Seu WhatsApp</label>
+          <input id="lookup" type="tel" inputmode="tel" autocomplete="tel" maxlength="24" required aria-describedby="lookupErr" placeholder="(11) 99999-9999">
+          <small class="field-error" id="lookupErr" role="alert" hidden></small>
+        </div>
+        <div class="field">
+          <label for="lookupReference">Referência da solicitação</label>
+          <input id="lookupReference" type="text" maxlength="40" autocomplete="off" spellcheck="false" required aria-describedby="lookupReferenceErr">
+          <small class="field-error" id="lookupReferenceErr" role="alert" hidden></small>
+        </div>
+        <button id="findAppointments" type="submit" class="btn btn-primary">Consultar horário</button>
+      </form>
+      <p class="lead mt-4">Se você perdeu sua referência ou fez um agendamento antes da atualização do site, fale com a Carol.</p>
+
+      <hr style="border:0;border-top:1px solid var(--line);margin:28px 0">
+
+      <!-- Área de Resultados -->
+      <p id="lookupStatus" role="status" class="lead"></p>
+      <div id="myAppointments"></div>
+
+    </article>
+
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div><div class="footer-brand">Nails by Nascimento<small>Manicure & Nail Design</small></div><p style="margin-top:16px">Estúdio de manicure com atendimento personalizado e hora marcada.</p></div>
+    <div><h4>Navegar</h4><p><a href="servicos.html">Serviços</a></p><p><a href="precos.html">Preços</a></p><p><a href="sobre.html">Sobre</a></p><p><a href="galeria.html">Galeria</a></p></div>
+    <div><h4>Cliente</h4><p><a href="agendamento.html">Agendar horário</a></p><p><a href="meus-horarios.html">Meus horários</a></p><p><a id="waLink" href="#" target="_blank" rel="noopener">WhatsApp</a></p></div>
+    <div><h4>Estúdio</h4><p>Atendimento com hora marcada</p><p>Segunda a sábado · das 9h às 19h</p><p><a href="admin.html">Área da Carol</a></p></div>
+  </div>
+  <div class="container footer-bottom"><span>© <span id="year"></span> Nails by Nascimento</span><span>Feito com carinho</span></div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="js/app-core.js"></script>
+<script src="js/lookup.js"></script>
+</body>
+</html>

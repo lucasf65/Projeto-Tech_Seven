@@ -1,0 +1,10 @@
+{
+  "name": "nails-by-nascimento",
+  "private": true,
+  "scripts": {
+    "build": "node build.js",
+    "test": "node --test tests/booking.test.mjs"
+  },
+  "engines": { "node": "22.x" },
+  "dependencies": { "firebase-admin": "^13.6.0" }
+}
