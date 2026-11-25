@@ -1,4 +1,28 @@
 'use strict';
+
+function galleryFigure(photo, index, interactive) {
+  const figure = document.createElement('figure');
+  const image = document.createElement('img');
+  image.src = photo.url;
+  image.alt = photo.alt;
+  image.loading = 'lazy';
+  image.decoding = 'async';
+  if (!interactive) {
+    figure.append(image);
+    return figure;
+  }
+  figure.style.setProperty('--i', String(index));
+  const open = document.createElement('button');
+  open.type = 'button';
+  open.className = 'g-open';
+  open.setAttribute('aria-label', `Ampliar foto: ${photo.alt}`);
+  const caption = document.createElement('figcaption');
+  caption.textContent = photo.alt;
+  open.append(image);
+  figure.append(open, caption);
+  return figure;
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   try{
     if(document.getElementById('featuredServices')){
@@ -29,21 +53,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     if(document.getElementById('homeGallery')){
       const list=(await loadGallery()).slice(0,4);
-      document.getElementById('homeGallery').innerHTML=list.map(g=>`
-        <figure><img src="${esc(g.url)}" alt="${esc(g.alt||'')}" loading="lazy"></figure>`).join('');
+      document.getElementById('homeGallery').replaceChildren(...list.map((photo, index) => galleryFigure(photo, index, false)));
     }
     if(document.getElementById('fullGallery')){
       const list=await loadGallery();
       const el=document.getElementById('fullGallery');
-      el.innerHTML = list.length
-        ? list.map((g,i)=>`
-          <figure style="--i:${i}">
-            <button type="button" class="g-open" aria-label="Ampliar foto${g.alt?': '+esc(g.alt):''}">
-              <img src="${esc(g.url)}" alt="${esc(g.alt||'')}" loading="lazy" decoding="async">
-            </button>
-            ${g.alt?`<figcaption>${esc(g.alt)}</figcaption>`:''}
-          </figure>`).join('')
-        : '<div class="empty">Nenhuma foto cadastrada ainda.</div>';
+      el.replaceChildren();
+      if (list.length) {
+        el.append(...list.map((photo, index) => galleryFigure(photo, index, true)));
+      } else {
+        const notice = document.createElement('div');
+        notice.className = 'empty';
+        notice.textContent = 'Nenhuma foto cadastrada ainda.';
+        el.append(notice);
+      }
       el.setAttribute('aria-busy','false');
       const cnt=document.getElementById('galCount');
       if(cnt) cnt.textContent = list.length ? `${list.length} trabalho${list.length===1?'':'s'}` : '';

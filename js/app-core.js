@@ -104,16 +104,36 @@ async function isSlotClosed(data, horario){
 }
 
 const GALLERY_FALLBACK = [
-  'assets/gallery/01.jpg','assets/gallery/02.jpg','assets/gallery/03.jpg',
-  'assets/gallery/04.jpg','assets/gallery/05.jpg','assets/gallery/06.jpg',
-  'assets/gallery/07.jpg','assets/gallery/08.jpg' // <-- mais fota
-];
+  'Unhas das mãos compridas com esmalte vermelho brilhante',
+  'Unhas dos pés com esmalte rosa-claro e pontas francesinhas',
+  'Unhas dos pés com esmalte rosa translúcido',
+  'Unhas curtas das mãos com esmalte escuro brilhante',
+  'Unhas amendoadas das mãos em rosa-claro com detalhes brancos',
+  'Unhas compridas das mãos com esmalte azul brilhante',
+  'Unhas amendoadas das mãos em tons de nude e rosa',
+  'Unhas dos pés com esmalte preto brilhante'
+].map((alt, index) => ({
+  url: `assets/gallery/${String(index + 1).padStart(2, '0')}.jpg`, alt
+}));
 async function loadGallery(){
+  let timeout;
   try{
-    const snap = await db.collection('galeria').orderBy('ordem').get();
-    if(snap.empty) return GALLERY_FALLBACK.map(u=>({url:u,alt:''}));
-    return snap.docs.map(d=>({id:d.id,...d.data()}));
-  }catch(e){ return GALLERY_FALLBACK.map(u=>({url:u,alt:''})); }
+    const snap = await Promise.race([
+      db.collection('galeria').orderBy('ordem').get(),
+      new Promise(resolve => { timeout = setTimeout(() => resolve(null), 3000); })
+    ]);
+    if (!snap) return GALLERY_FALLBACK;
+    const photos = snap.docs.flatMap((d, index) => {
+      const photo = d.data();
+      const url = typeof photo.url === 'string' ? photo.url.trim() : '';
+      if (!/^assets\/gallery\/\d{2}\.jpg$/.test(url) && !validHttpsUrl(url)) return [];
+      const fallback = GALLERY_FALLBACK.find(item => item.url === url)?.alt;
+      const alt = (typeof photo.alt === 'string' && photo.alt.trim()) || fallback || `Trabalho do estúdio, foto ${index + 1}`;
+      return [{ url, alt }];
+    });
+    return photos.length ? photos : GALLERY_FALLBACK;
+  }catch{ return GALLERY_FALLBACK; }
+  finally { clearTimeout(timeout); }
 }
 
 /* ===== Nav + reveal + sticky header ===== */
