@@ -1,8 +1,11 @@
 'use strict';
 
 /* ===== Editáveis ===== */
-const PIX_KEY = 'carol@exemplo.com';
-const WHATSAPP = '5511999999999';
+const PIX_KEY = '+5511932298711';          // chave PIX (celular) — é o que o banco reconhece ao colar
+const PIX_KEY_LABEL = '(11) 93229-8711';   // como a chave aparece para a cliente
+const PIX_FAVORECIDA = 'Carol Nascimento';
+const PIX_COPIA_COLA = '00020101021126360014BR.GOV.BCB.PIX0114+55119322987115204000053039865802BR5916Carol Nascimento6009SAO PAULO62080504daqr6304AB95';
+const WHATSAPP = '5511932298711';
 
 /* ===== Constantes ===== */
 const SLOTS = ['09:00','10:00','11:00','14:00','15:00','16:00'];
@@ -169,6 +172,15 @@ function initPageTransitions() {
       }, 600);
     });
   }
+
+  // Voltar/avançar no navegador restaura a página do cache (bfcache) exatamente como estava,
+  // com a tela de transição ainda ligada e sem disparar 'load'. Aqui a gente desliga.
+  window.addEventListener('pageshow', (e) => {
+    if (!e.persisted) return;
+    sessionStorage.removeItem('internal_nav');
+    transitionEl.classList.remove('active');
+    transitionEl.classList.add('fade-out');
+  });
 
   document.querySelectorAll('a').forEach(link => {
     link.addEventListener('click', (e) => {

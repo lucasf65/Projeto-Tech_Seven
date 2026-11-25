@@ -9,7 +9,9 @@ const $el = (id) => document.getElementById(id);
 
 document.addEventListener('DOMContentLoaded', async () => {
   if (!$el('services')) return;
-  $el('pixKey').textContent = PIX_KEY;
+  $el('pixKey').textContent = PIX_KEY_LABEL;
+  $el('pixFavorecida').textContent = PIX_FAVORECIDA;
+  $el('pixCode').textContent = PIX_COPIA_COLA;
 
   try {
     servicesCache = await loadServices();
@@ -45,11 +47,27 @@ document.addEventListener('DOMContentLoaded', async () => {
   $el('phone').addEventListener('blur', () => { touched.phone = true; showErrors(); });
   $el('privacy').addEventListener('change', () => { touched.privacy = true; updateSummary(); showErrors(); });
   $el('request').addEventListener('click', submitAppointment);
-  $el('copyPix').addEventListener('click', () => {
-    navigator.clipboard.writeText(PIX_KEY).then(() => toast('Chave PIX copiada!')).catch(() => toast('Copie manualmente: ' + PIX_KEY));
-  });
+  $el('copyPix').addEventListener('click', () => copyText(PIX_COPIA_COLA, 'Código PIX copiado! Cole no app do seu banco.'));
+  $el('copyKey').addEventListener('click', () => copyText(PIX_KEY, 'Chave PIX copiada!'));
   $el('paidPix').addEventListener('click', markPixPaid);
 });
+
+/* ---------- Copiar para a área de transferência ---------- */
+function copyText(text, okMsg) {
+  const fallback = () => {
+    const t = document.createElement('textarea');
+    t.value = text; t.setAttribute('readonly', '');
+    t.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+    document.body.appendChild(t); t.select();
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) { /* ignora */ }
+    t.remove();
+    toast(ok ? okMsg : 'Não deu para copiar. Selecione o código e copie manualmente.');
+  };
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(() => toast(okMsg)).catch(fallback);
+  } else fallback();
+}
 
 /* ---------- Validação ---------- */
 function fieldStatus() {

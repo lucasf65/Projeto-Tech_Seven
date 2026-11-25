@@ -185,11 +185,16 @@ FIREBASE_APP_ID
 Em `js/app-core.js`, edite:
 
 ```js
-const PIX_KEY  = 'carol@exemplo.com'; // chave PIX exibida no agendamento
+const PIX_KEY        = '+5511932298711';   // chave PIX (celular)
+const PIX_KEY_LABEL  = '(11) 93229-8711';  // como a chave aparece na tela
+const PIX_FAVORECIDA = 'Carol Nascimento';
+const PIX_COPIA_COLA = '00020101...';      // código "copia e cola" completo do PIX
 const WHATSAPP = '5511999999999';     // número usado nos links de WhatsApp
 const SLOTS    = ['09:00','10:00','11:00','14:00','15:00','16:00'];
 const SINAL    = 30;                  // valor do sinal em reais
 ```
+
+> O QR Code do PIX fica em `assets/qr-pix.png`. Se trocar a chave PIX, gere um novo QR no app do banco e substitua a imagem junto com `PIX_COPIA_COLA`.
 
 > Se alterar o valor do sinal, atualize também os textos em `agendamento.html`, `index.html` e `precos.html`, que mencionam R$ 30.
 

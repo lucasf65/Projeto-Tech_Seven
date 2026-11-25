@@ -1,0 +1,93 @@
+/* =========================================================
+   SERVIÇOS — "Conheça os procedimentos"
+   Usa as variáveis do styles.css (--ink, --line, --soft, --r-lg…)
+   ========================================================= */
+
+/* Topo da página */
+.servicos-hero{padding-top:clamp(48px,6vw,72px);padding-bottom:0}
+.proc-section{padding-top:clamp(40px,5vw,64px)}
+
+.proc-list{display:flex;flex-direction:column;gap:clamp(18px,2.4vw,28px)}
+
+.proc{
+  display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);
+  background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;
+  transition:box-shadow .3s var(--ease),border-color .3s var(--ease);
+}
+.proc:hover{box-shadow:var(--shadow-sm);border-color:var(--line-2)}
+
+/* Imagem */
+.proc-media{position:relative;min-height:320px;background:var(--soft);overflow:hidden}
+.proc-media::before{ /* aparece só se a imagem não existir em /assets */
+  content:"✦";position:absolute;inset:0;display:grid;place-items:center;
+  font-size:34px;color:var(--line-2);
+}
+.proc-media img{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  transition:transform 1s var(--ease);
+}
+.proc:hover .proc-media img{transform:scale(1.04)}
+.proc-media::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(to top,#00000026,transparent 45%);
+}
+.proc-num{
+  position:absolute;left:18px;top:18px;z-index:1;
+  min-width:44px;height:44px;padding:0 12px;display:grid;place-items:center;
+  border-radius:999px;background:rgba(255,255,255,.94);backdrop-filter:blur(10px);
+  font-family:var(--font-display);font-size:20px;font-weight:700;color:var(--ink);
+  box-shadow:var(--shadow-xs);
+}
+
+/* Texto */
+.proc-body{
+  display:flex;flex-direction:column;justify-content:center;gap:16px;
+  padding:clamp(26px,3.6vw,52px);
+}
+.proc-tag{
+  align-self:flex-start;padding:5px 12px;border:1px solid var(--line);border-radius:999px;
+  background:var(--mist);font-size:10.5px;font-weight:700;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--muted);
+}
+.proc-body h3{font-size:clamp(28px,3.2vw,40px);line-height:1.05}
+.proc-body p{margin:0;color:var(--muted);font-size:15px;line-height:1.75;max-width:52ch}
+.proc-link{
+  align-self:flex-start;display:inline-flex;align-items:center;gap:8px;
+  margin-top:6px;padding-bottom:3px;border-bottom:1px solid var(--ink);
+  font-size:13px;font-weight:700;letter-spacing:.02em;color:var(--ink);
+  transition:gap .25s var(--ease),color .2s var(--ease),border-color .2s var(--ease);
+}
+.proc-link:hover{gap:12px;color:var(--brand);border-color:var(--brand)}
+
+/* Alterna o lado da imagem em telas largas */
+@media(min-width:861px){
+  .proc:nth-child(even){grid-template-columns:minmax(0,7fr) minmax(0,5fr)}
+  .proc:nth-child(even) .proc-media{order:2}
+  .proc:nth-child(even) .proc-num{left:auto;right:18px}
+}
+
+/* Mobile: imagem em cima, texto embaixo */
+@media(max-width:860px){
+  .proc{grid-template-columns:minmax(0,1fr)}
+  .proc-media{min-height:0;aspect-ratio:1/1}
+  .proc-media img{object-position:center 35%}
+}
+
+/* Faixa de serviços complementares */
+.proc-extra{
+  display:flex;align-items:center;justify-content:space-between;gap:18px 32px;flex-wrap:wrap;
+  margin-top:clamp(22px,3vw,36px);padding:22px clamp(20px,3vw,32px);
+  background:var(--ink);color:#f1ece5;border-radius:var(--r-lg);
+}
+.proc-extra strong{display:block;font-family:var(--font-display);font-size:24px;font-weight:700;color:#fff}
+.proc-extra p{margin:4px 0 0;font-size:13px;color:#b9b1a8}
+.proc-extra ul{list-style:none;margin:0;padding:0;display:flex;gap:8px;flex-wrap:wrap}
+.proc-extra li{
+  padding:7px 14px;border:1px solid #ffffff2e;border-radius:999px;
+  font-size:12.5px;font-weight:600;color:#f1ece5;
+}
+
+@media(prefers-reduced-motion:reduce){
+  .proc,.proc-media img,.proc-link{transition:none}
+  .proc:hover .proc-media img{transform:none}
+}

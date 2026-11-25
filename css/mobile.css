@@ -1,0 +1,200 @@
+/* =========================================================
+   MOBILE — ajustes exclusivos para celular (até 640px)
+   Carregar por último em todas as páginas. Nada aqui afeta o desktop.
+   ========================================================= */
+@media (max-width:640px){
+:root{--m-hh:60px;--m-bar:72px}
+body:has(.dash,.cl,#adminLogin,.booking-grid){--m-bar:0px}
+a,button{-webkit-tap-highlight-color:transparent}
+button,.btn,.tiny,.slot,.chip{touch-action:manipulation}
+input,select,textarea{font-size:16px}
+
+/* ---------- Tipografia e ritmo ---------- */
+.container{padding-inline:20px}
+h1{font-size:clamp(32px,9.2vw,40px);line-height:1.04}
+h2{font-size:clamp(26px,7.4vw,32px)}
+.lead{font-size:15px;line-height:1.65}
+.eyebrow{font-size:10.5px;letter-spacing:.18em}
+.section{padding-block:48px}
+.section-tight{padding-block:36px}
+.section-head{gap:14px;margin-bottom:24px}
+.section-head .btn{justify-self:start}
+.btn{min-height:48px;padding:13px 20px}
+.grid{gap:12px}
+.card{padding:20px;gap:12px}
+.card .icon{width:42px;height:42px;font-size:20px}
+.card .price{font-size:24px}
+.tiny{min-height:40px}
+.section-dark .btn{width:100%}
+
+/* ---------- Cabeçalho compacto ---------- */
+.site-header{background:#fff;backdrop-filter:none;-webkit-backdrop-filter:none;border-bottom-color:var(--line)}
+.nav-wrap{padding-block:9px;gap:12px}
+.brand{gap:10px}
+.brand img{width:38px;height:38px}
+.brand-meta strong{font-size:18px}
+.brand-meta span{font-size:8.5px;letter-spacing:.24em;margin-top:2px}
+.nav-toggle{width:42px;height:42px;flex:none}
+.nav-toggle span,.nav-toggle span::before,.nav-toggle span::after{width:18px}
+.nav-toggle[aria-expanded="true"] span{background:transparent}
+.nav-toggle[aria-expanded="true"] span::before{top:0;transform:rotate(45deg)}
+.nav-toggle[aria-expanded="true"] span::after{top:0;transform:rotate(-45deg)}
+.nav-links{inset:var(--m-hh) 0 auto 0;padding:8px 12px 14px;max-height:calc(100dvh - var(--m-hh));overflow-y:auto;border-radius:0 0 20px 20px}
+.nav-links a{padding:15px 16px;font-size:16px;border-radius:14px}
+
+/* Botão "Agendar horário" vira barra fixa no rodapé da tela */
+.nav-cta{position:fixed;left:0;right:0;bottom:0;z-index:55;padding:12px 16px calc(10px + env(safe-area-inset-bottom,0px));background:linear-gradient(to top,var(--mist) 55%,transparent);pointer-events:none}
+.nav-cta .btn{pointer-events:auto;width:100%;min-height:50px;padding:13px 20px;font-size:14px;box-shadow:var(--shadow)}
+.nav-cta:has(.btn[aria-current="page"]),
+body:has(.dash,.cl,#adminLogin) .nav-cta{display:none}
+.toast{bottom:calc(var(--m-bar) + 16px + env(safe-area-inset-bottom,0px));max-width:calc(100vw - 32px);white-space:normal;text-align:center;border-radius:18px;padding:12px 18px}
+
+/* ---------- Rodapé ---------- */
+.site-footer{padding-block:44px calc(24px + var(--m-bar) + env(safe-area-inset-bottom,0px))}
+.footer-grid{grid-template-columns:1fr 1fr;gap:28px 20px}
+.footer-grid>div:first-child,.footer-grid>div:last-child{grid-column:1/-1}
+.footer-bottom{margin-top:32px;flex-direction:column;gap:6px;font-size:10.5px}
+
+/* ---------- Início ---------- */
+.hero{padding-block:20px 36px}
+.hero .container{gap:22px}
+.hero-visual{aspect-ratio:4/3.4;border-radius:22px}
+.hero-badge{left:12px;bottom:12px;padding:9px 12px}
+.hero-copy h1{margin-top:14px}
+.hero-copy .lead{margin:14px 0 22px}
+.hero-actions{flex-direction:column}
+.hero-actions .btn{width:100%}
+.marquee{padding:11px 0}
+.marquee-track{gap:36px}
+.marquee span{font-size:17px}
+.marquee span::after{margin-left:36px}
+.gallery{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.gallery figure{border-radius:16px}
+#servicesGrid .btn{width:100%}
+
+/* ---------- Serviços ---------- */
+.servicos-hero{padding-top:32px}
+.proc-section{padding-top:28px}
+.proc-list{gap:16px}
+.proc{border-radius:20px}
+.proc-media{aspect-ratio:4/3}
+.proc-num{left:12px;top:12px;min-width:36px;height:36px;font-size:17px}
+.proc-body{padding:20px;gap:12px}
+.proc-body h3{font-size:26px}
+.proc-body p{font-size:14.5px;line-height:1.7}
+.proc-extra{padding:20px;border-radius:20px}
+.proc-extra strong{font-size:22px}
+
+/* ---------- Preços ---------- */
+.pr-hero{padding:28px 0 20px}
+.pr-ticket{padding:22px}
+.pr-ticket .pr-t-value{font-size:56px}
+
+/* ---------- Sobre ---------- */
+#aboutGrid{gap:22px!important}
+#aboutGrid img{aspect-ratio:1/1!important;border-radius:22px!important}
+
+/* ---------- Galeria ---------- */
+.gal-hero{padding:32px 0 20px}
+.gal-hero h1{font-size:44px}
+.gal-chip{padding:7px 14px}
+.gallery-page .gallery{gap:8px}
+.gallery-page .gallery figure{border-radius:16px}
+.gal-cta-actions .btn{width:100%}
+
+/* ---------- Agendamento ---------- */
+.booking-grid{gap:14px}
+.booking-grid .card{padding:16px}
+.step-pill{font-size:10.5px}
+
+/* ---------- Meus horários ---------- */
+.mh-hero{padding:36px 0 22px}
+.mh-lookup{padding:18px}
+.mh-input input{font-size:16px}
+.mh-card{grid-template-columns:64px minmax(0,1fr);gap:12px;padding:14px}
+.mh-date{min-height:76px;padding:8px 4px}
+.mh-day{font-size:26px}
+.mh-top h3{font-size:20px}
+.mh-actions .tiny{flex:1 1 calc(50% - 4px);justify-content:center}
+.mh-actions .tiny.wa{flex-basis:100%}
+.mh-help{gap:10px}
+.mh-help-item{display:grid;grid-template-columns:auto 1fr;column-gap:14px;padding:14px}
+.mh-help-item svg{grid-row:1/3;margin:2px 0 0}
+.mh-dlg-overlay{align-items:end;padding:12px}
+.mh-dlg{max-width:none;border-radius:22px}
+
+/* ---------- Painel da Carol ---------- */
+.admin-login-wrap{padding:28px 20px}
+#adminPanel .section-head{grid-template-columns:1fr auto;align-items:center}
+.stat-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:18px}
+.stat{padding:14px 12px}
+.stat b{font-size:26px}
+.stat span{font-size:9.5px;letter-spacing:.08em;line-height:1.3}
+.admin-grid-advanced{gap:16px}
+.admin-toolbar{width:100%}
+.admin-toolbar select{flex:1 1 100%;min-width:0;min-height:44px}
+.appointment-head{gap:8px}
+.actions .tiny{flex:1 1 auto;justify-content:center;min-height:42px}
+.admin-service{flex-wrap:wrap}
+.admin-service input[data-field="name"]{flex:1 1 100%}
+.admin-service input[data-field="duration"],.admin-service input[data-field="price"]{flex:1 1 0;width:auto}
+.admin-service .remove{width:42px;height:42px}
+.modal-agenda-overlay,.modal-overlay{align-items:flex-end}
+.modal-agenda-content{max-width:none;max-height:92dvh;border-radius:24px 24px 0 0}
+.modal-header-custom{padding:18px 20px}
+.modal-header-custom h2{font-size:26px!important}
+.modal-agenda-body{padding:16px;gap:14px}
+.modal-calendar-box,.modal-slots-box{padding:16px}
+.modal-footer-custom{padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px))}
+.modal-content{max-width:none;max-height:92dvh;overflow-y:auto;border-radius:24px 24px 0 0;padding:22px 18px calc(22px + env(safe-area-inset-bottom,0px))}
+
+/* ---------- Dashboard ---------- */
+.dash{padding-top:20px}
+.dash-top{gap:16px;margin-bottom:20px}
+.dash-tools{width:100%;gap:8px}
+.month-nav{order:-1;width:100%;justify-content:space-between}
+.month-nav strong{flex:1}
+.dash-tools .btn{flex:1}
+.live{order:5}
+.week-summary{padding:16px}
+.week-stat b{font-size:26px}
+.kpi-grid,.dash-grid{gap:10px}
+.kpi{padding:14px}
+.kpi-label{font-size:12px}
+.kpi-icon{width:32px;height:32px}
+.kpi-val{font-size:24px;margin-top:6px}
+.kpi.wide .kpi-val{font-size:38px;margin-top:12px}
+.kpi-hint{font-size:11px}
+.dash-card{padding:18px 16px 14px}
+.dash-card h3{font-size:21px}
+.chart-box{min-height:260px}
+.chart-box.sm{min-height:230px}
+
+/* ---------- Clientes ---------- */
+.cl-top{margin-bottom:18px}
+.cl-actions{width:100%}
+.cl-actions .btn{flex:1}
+.cl-kpis{gap:10px}
+.cl-kpi{padding:14px}
+.cl-kpi b{font-size:22px}
+.cl-list-card{padding:14px}
+.cl-search{height:46px}
+#clientSort{width:100%;height:46px}
+.cl-chips{flex-wrap:nowrap;overflow-x:auto;margin:0 -14px;padding:0 14px 2px;scrollbar-width:none}
+.cl-chips::-webkit-scrollbar{display:none}
+.chip{flex:none;min-height:38px;padding:8px 14px}
+.client-results{max-height:none;overflow:visible;margin:0;padding:0}
+.client-row{padding:12px 6px}
+.cl-detail{padding:18px}
+.cl-head-actions{width:100%;flex-wrap:wrap}
+.cl-head-actions .btn{flex:1}
+.cl-del{width:44px;height:44px}
+.client-history-list{max-height:none}
+.dlg-overlay{padding:16px}
+}
+
+/* Em telas de toque o hover "gruda" depois do toque */
+@media (max-width:640px) and (hover:none){
+.card:hover,.service:hover,.proc:hover{transform:none;box-shadow:none}
+.btn:hover{transform:none;box-shadow:none}
+}

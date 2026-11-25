@@ -10,6 +10,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/galeria.css">
+<link rel="stylesheet" href="css/mobile.css">
 </head>
 <body>
 
@@ -35,18 +37,52 @@
   </div>
 </header>
 
-<main>
-  <section class="section-tight" style="padding-top:64px;border-bottom:1px solid var(--line)">
-    <div class="container" style="text-align:center;max-width:760px;padding-bottom:48px">
+<main class="gallery-page">
+  <!-- ===== TOPO ===== -->
+  <section class="gal-hero">
+    <div class="container">
       <span class="eyebrow" style="justify-content:center">Portfólio</span>
-      <h1 style="margin:16px 0 16px;font-size:clamp(36px,5vw,64px)">Galeria</h1>
-      <p class="lead" style="margin-inline:auto">Conheça alguns dos trabalhos realizados no estúdio.</p>
+      <h1>Galeria</h1>
+      <p class="lead">Conheça alguns dos trabalhos realizados no estúdio. Clique em uma foto para ampliar.</p>
+      <div class="gal-meta">
+        <span class="gal-chip" id="galCount"></span>
+        <a class="gal-chip" href="https://instagram.com/nailsbynascimento" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".6" fill="currentColor"/></svg>
+          @nailsbynascimento
+        </a>
+      </div>
     </div>
   </section>
 
-  <section class="section">
+  <!-- ===== FOTOS ===== -->
+  <section class="gal-body">
     <div class="container">
-      <div class="gallery" id="fullGallery" aria-busy="true"><div class="empty">Carregando…</div></div>
+      <div class="gallery" id="fullGallery" aria-busy="true">
+        <span class="g-skel" aria-hidden="true"></span>
+        <span class="g-skel" aria-hidden="true"></span>
+        <span class="g-skel" aria-hidden="true"></span>
+        <span class="g-skel" aria-hidden="true"></span>
+        <span class="g-skel" aria-hidden="true"></span>
+        <span class="g-skel" aria-hidden="true"></span>
+        <span class="g-skel" aria-hidden="true"></span>
+        <span class="g-skel" aria-hidden="true"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CHAMADA FINAL ===== -->
+  <section class="section section-dark gal-cta">
+    <div class="container">
+      <span class="eyebrow" style="justify-content:center">Gostou do que viu?</span>
+      <h2>Garanta o seu horário</h2>
+      <p class="lead">Escolha o serviço, a data e o horário em poucos passos, sem precisar criar uma senha.</p>
+      <div class="gal-cta-actions">
+        <a class="btn btn-gold" href="agendamento.html">Agendar horário <span class="arrow">→</span></a>
+        <a class="btn btn-outline-light" href="https://instagram.com/nailsbynascimento" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".6" fill="currentColor"/></svg>
+          Ver mais no Instagram
+        </a>
+      </div>
     </div>
   </section>
 </main>
@@ -56,9 +92,9 @@
     <div><div class="footer-brand">Nails by Nascimento<small>Manicure & Nail Design</small></div><p style="margin-top:16px">Estúdio de manicure com atendimento personalizado e hora marcada.</p></div>
     <div><h4>Navegar</h4><p><a href="servicos.html">Serviços</a></p><p><a href="precos.html">Preços</a></p><p><a href="sobre.html">Sobre</a></p><p><a href="galeria.html">Galeria</a></p></div>
     <div><h4>Cliente</h4><p><a href="agendamento.html">Agendar horário</a></p><p><a href="meus-horarios.html">Meus horários</a></p><p><a id="waLink" href="#" target="_blank" rel="noopener">WhatsApp</a></p></div>
-    <div><h4>Estúdio</h4><p>Atendimento com hora marcada</p><p>Segunda a sábado · das 9h às 19h</p><p><a href="admin.html">Área da Carol</a></p></div>
+    <div><h4>Estúdio</h4><p>Atendimento com hora marcada</p><p>Segunda a sábado · das 9h às 19h</p><p>Rua Titânio, 146<br>CEP 06365-673</p><p><a href="admin.html">Área da Carol</a></p></div>
   </div>
-  <div class="container footer-bottom"><span>© <span id="year"></span> Nails by Nascimento</span><span>Feito com carinho</span></div>
+  <div class="container footer-bottom"><span>© <span id="year"></span> Nails by Nascimento · CNPJ 68.585.149/0001-13</span><span>Feito com carinho</span></div>
 </footer>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
@@ -68,5 +104,6 @@
 <script src="js/firebase-config.js"></script>
 <script src="js/app-core.js"></script>
 <script src="js/site.js"></script>
+<script src="js/galeria.js"></script>
 </body>
 </html>

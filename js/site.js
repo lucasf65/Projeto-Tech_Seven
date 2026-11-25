@@ -36,8 +36,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       const list=await loadGallery();
       const el=document.getElementById('fullGallery');
       el.innerHTML = list.length
-        ? list.map(g=>`<figure><img src="${esc(g.url)}" alt="${esc(g.alt||'')}" loading="lazy"></figure>`).join('')
+        ? list.map((g,i)=>`
+          <figure style="--i:${i}">
+            <button type="button" class="g-open" aria-label="Ampliar foto${g.alt?': '+esc(g.alt):''}">
+              <img src="${esc(g.url)}" alt="${esc(g.alt||'')}" loading="lazy" decoding="async">
+            </button>
+            ${g.alt?`<figcaption>${esc(g.alt)}</figcaption>`:''}
+          </figure>`).join('')
         : '<div class="empty">Nenhuma foto cadastrada ainda.</div>';
+      el.setAttribute('aria-busy','false');
+      const cnt=document.getElementById('galCount');
+      if(cnt) cnt.textContent = list.length ? `${list.length} trabalho${list.length===1?'':'s'}` : '';
     }
     document.querySelectorAll('.reveal').forEach(el=>{
       if(!el.classList.contains('in')) el.classList.add('in');
