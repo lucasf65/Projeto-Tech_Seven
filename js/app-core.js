@@ -1,37 +1,36 @@
 'use strict';
 
-/* ===== Editáveis ===== */
-const PIX_KEY = '+5511932298711';          // chave PIX (celular) — é o que o banco reconhece ao colar
-const PIX_KEY_LABEL = '(11) 93229-8711';   // como a chave aparece para a cliente
-const PIX_FAVORECIDA = 'Carol Nascimento';
-const PIX_COPIA_COLA = '00020101021126360014BR.GOV.BCB.PIX0114+55119322987115204000053039865802BR5916Carol Nascimento6009SAO PAULO62080504daqr6304AB95';
-const WHATSAPP = '5511932298711';
-
-/* ===== Constantes ===== */
-const SLOTS = ['09:00','10:00','11:00','14:00','15:00','16:00'];
 const SINAL = 30;
 
 /* ===== Utils ===== */
-function esc(s){const d=document.createElement('div');d.textContent=s??'';return d.innerHTML;}
+function esc(s){
+  const d=document.createElement('div');
+  d.textContent=s??'';
+  return d.innerHTML.replaceAll('"','&quot;').replaceAll("'",'&#39;');
+}
 function money(n){return (+n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});}
+function rescheduleCount(appointment) {
+  if (appointment.canceladoPor === 'reagendamento') return 1;
+  return appointment.origem === 'site-v2' ? 0 : Number(appointment.reagendamentos) || 0;
+}
 function digits(s){return (s||'').replace(/\D/g,'');}
-function keyDate(d){const x=new Date(d);x.setHours(12,0,0,0);return x.toISOString().slice(0,10);}
+function keyDate(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
 function br(x,long=false){
   if(!x) return '—';
   return new Date(x+'T12:00:00').toLocaleDateString('pt-BR',
     long?{weekday:'long',day:'2-digit',month:'long'}:{day:'2-digit',month:'2-digit',year:'numeric'});
 }
 function formatPhoneDisplay(p){
-  p=digits(p);
+  p=normalizeBrazilianPhone(p);
   return p.length>10
     ? p.replace(/(\d{2})(\d{5})(\d{0,4})/,'($1) $2-$3')
     : p.replace(/(\d{2})(\d{0,4})(\d{0,4})/,'($1) $2-$3');
 }
 function formatPhoneInput(e){
-  const n=digits(e.target.value).slice(0,11);
-  e.target.value = n.length>10
-    ? n.replace(/(\d{2})(\d{5})(\d{0,4})/,'($1) $2-$3')
-    : n.replace(/(\d{2})(\d{0,4})(\d{0,4})/,'($1) $2-$3');
+  const n=normalizeBrazilianPhone(e.target.value).slice(0,11);
+  if(n.length <= 2){ e.target.value=n; return; }
+  const split=n.length>10 ? 7 : 6;
+  e.target.value=`(${n.slice(0,2)}) ${n.slice(2,split)}${n.length>split ? '-'+n.slice(split) : ''}`;
 }
 function waLink(phone,text){
   let p=digits(phone); if(p.length===10||p.length===11) p='55'+p;
@@ -52,9 +51,15 @@ function validName(s){
   return s.length>=2 && s.length<=80 && NAME_RE.test(s) && (s.match(/\p{L}/gu)||[]).length>=2;
 }
 /* WhatsApp para agendar: DDD válido + 9 + 8 dígitos (11 dígitos) */
-function validPhone(p){ p=digits(p); return /^[1-9]\d9\d{8}$/.test(p) && DDD_RE.test(p); }
-/* Consulta: aceita também números antigos de 10 dígitos */
-function validPhoneLookup(p){ p=digits(p); return (p.length===10||p.length===11) && DDD_RE.test(p); }
+function normalizeBrazilianPhone(value){
+  const phone=digits(value);
+  return phone.length===13 && phone.startsWith('55') ? phone.slice(2) : phone;
+}
+function validPhone(p){
+  if(typeof p !== 'string' || !/^\+?[\d()\- .]+$/.test(p.trim())) return false;
+  p=normalizeBrazilianPhone(p);
+  return /^[1-9]\d9\d{8}$/.test(p) && DDD_RE.test(p);
+}
 function validHttpsUrl(u){
   try{ const x=new URL(u); return x.protocol==='https:' && x.hostname.includes('.'); }
   catch(e){ return false; }
@@ -71,36 +76,9 @@ function setFieldError(input,msg,errId){
 
 /* ===== Dados ===== */
 async function loadServices(){
-  const snap = await db.collection('servicos').orderBy('id').get();
-  if(snap.empty){
-    const defaults=[
-      {id:1,name:'Manicure simples',description:'Cutilagem e esmaltação',duration:'40 min',price:35,icon:'💅'},
-      {id:2,name:'Alongamento em gel',description:'Aplicação e finalização',duration:'1h 30 min',price:90,icon:'✨'},
-      {id:3,name:'Pacote mãos + pés',description:'Cuidado completo',duration:'1h 10 min',price:70,icon:'🌸'}
-    ];
-    for(const s of defaults) await db.collection('servicos').doc(String(s.id)).set(s);
-    return defaults;
-  }
-  return snap.docs.map(d=>d.data());
-}
-
-async function isSlotBusy(data, horario){
-  const snap = await db.collection('agendamentos')
-    .where('data','==',data).where('horario','==',horario)
-    .where('status','not-in',['recusado','cancelado']).get();
-  return !snap.empty;
-}
-
-async function isSlotClosed(data, horario){
-  try {
-    const doc = await db.collection('disponibilidades').doc(data).get();
-    if(!doc.exists) return false;
-    const closedList = doc.data().closed || [];
-    return closedList.includes(horario);
-  } catch (e) {
-    console.error("Erro ao checar disponibilidades:", e);
-    return false;
-  }
+  const res = await fetch('/api/booking?action=services', { headers: { Accept: 'application/json' } });
+  if(!res.ok) throw new Error('Não foi possível carregar os serviços.');
+  return (await res.json()).services;
 }
 
 const GALLERY_FALLBACK = [
@@ -147,8 +125,17 @@ function initCommonUI(){
     });
   }
   const y=document.getElementById('year'); if(y) y.textContent=new Date().getFullYear();
-  const wa=document.getElementById('waLink');
-  if(wa){ wa.href=waLink(WHATSAPP,'Olá! Vim pelo site e gostaria de saber mais.'); }
+  for (const link of document.querySelectorAll('#waLink, [data-studio-contact]')) {
+    if (studioConfig.whatsapp) {
+      link.href = waLink(studioConfig.whatsapp, 'Olá! Vim pelo site e gostaria de saber mais.');
+    } else if (link.id === 'waLink') {
+      link.href = 'sobre.html#contato';
+      link.removeAttribute('target');
+      link.textContent = 'Contato';
+    } else {
+      link.hidden = true;
+    }
+  }
 
   const header=document.querySelector('.site-header');
   if(header){
@@ -192,15 +179,6 @@ function initPageTransitions() {
       }, 600);
     });
   }
-
-  // Voltar/avançar no navegador restaura a página do cache (bfcache) exatamente como estava,
-  // com a tela de transição ainda ligada e sem disparar 'load'. Aqui a gente desliga.
-  window.addEventListener('pageshow', (e) => {
-    if (!e.persisted) return;
-    sessionStorage.removeItem('internal_nav');
-    transitionEl.classList.remove('active');
-    transitionEl.classList.add('fade-out');
-  });
 
   document.querySelectorAll('a').forEach(link => {
     link.addEventListener('click', (e) => {

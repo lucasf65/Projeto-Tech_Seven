@@ -1,0 +1,172 @@
+.admin-feedback {
+  color: var(--ink);
+  font-size: 0.875rem;
+  margin-block: 0.75rem;
+}
+
+.admin-feedback:empty {
+  margin: 0;
+}
+
+.admin-feedback-error {
+  color: var(--bad);
+  font-weight: 600;
+}
+
+#agendaTitle {
+  font-size: clamp(1.4rem, 4vw, 2rem);
+  margin-top: 0.25rem;
+}
+
+#agendaModal .modal-agenda-content {
+  width: calc(100% - 1.5rem);
+  max-width: 840px;
+  max-height: 92dvh;
+}
+
+#agendaModal .agenda-editor {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  padding: clamp(0.75rem, 3vw, 1.5rem);
+  align-items: start;
+}
+
+#agendaModal .agenda-editor > div,
+#weeklyEditor {
+  min-width: 0;
+  width: 100%;
+  padding: clamp(0.75rem, 3vw, 1.25rem);
+}
+
+.agenda-editor [hidden] {
+  display: none !important;
+}
+
+#agendaModal .modal-header-custom,
+#agendaModal .modal-footer-custom {
+  padding: 0.875rem clamp(0.75rem, 3vw, 1.5rem);
+}
+
+#weeklyEditor {
+  grid-column: 1 / -1;
+}
+
+#weeklyEditor summary {
+  cursor: pointer;
+  font-weight: 600;
+  padding-block: 0.375rem;
+}
+
+#weeklyHours {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0.75rem 0;
+}
+
+.agenda-day,
+#blockedSlots {
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  margin: 0;
+  min-width: 0;
+  padding: 0.625rem 0.75rem;
+}
+
+#blockedSlots {
+  margin-top: 0.75rem;
+}
+
+.agenda-day legend,
+#blockedSlots legend {
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding-inline: 0.25rem;
+}
+
+.agenda-hours-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+  gap: 0.375rem;
+  align-items: end;
+  margin-bottom: 0.625rem;
+}
+
+.agenda-hours-row label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.8125rem;
+}
+
+.agenda-hours-row input[type="time"] {
+  appearance: auto;
+  background: var(--white);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-sm);
+  color: var(--ink);
+  font: inherit;
+  height: 2.5rem;
+  min-width: 0;
+  padding: 0.125rem 0.25rem;
+}
+
+#modalAvailability {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(4.5rem, 1fr));
+  gap: 0.25rem;
+  font-size: 0.875rem;
+}
+
+#modalAvailability label {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: 2.5rem;
+}
+
+.admin-service.catalog-row {
+  display: grid;
+  align-items: start;
+  gap: 0.5rem;
+  padding-block: 0.75rem;
+}
+
+.catalog-row p {
+  font-size: 0.875rem;
+  margin: 0.25rem 0 0;
+}
+
+.catalog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+#serviceModal .modal-content {
+  width: min(31rem, calc(100% - 1.5rem));
+  max-height: 92dvh;
+  overflow-y: auto;
+  padding: clamp(1rem, 4vw, 2rem);
+}
+
+#serviceModal .field-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+@media (min-width: 720px) {
+  #agendaModal .agenda-editor {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  }
+
+  #weeklyHours {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 380px) {
+  .agenda-hours-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

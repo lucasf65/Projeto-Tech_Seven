@@ -23,7 +23,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (!list) return;
 
   const wa = document.getElementById('prWa');
-  if (wa) wa.href = waLink(WHATSAPP, 'Olá! Gostaria de saber os valores de decoração e manutenção.');
+  if (wa && studioConfig.whatsapp) {
+    wa.href = waLink(studioConfig.whatsapp, 'Olá! Gostaria de saber os valores de decoração e manutenção.');
+  } else if (wa) {
+    wa.href = 'sobre.html#contato';
+    wa.removeAttribute('target');
+    wa.textContent = 'Falar com a Carol';
+  }
 
   try {
     const services = await loadServices();
