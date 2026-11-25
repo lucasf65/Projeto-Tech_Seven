@@ -48,9 +48,14 @@ async function init() {
     const byPhone = new Map();
     cs.docs.forEach(d => {
       const c = { id: d.id, ...d.data() };
-      const k = c.telefone || c.id;
-      if (byPhone.has(k)) byPhone.get(k)._ids.push(c.id);
-      else byPhone.set(k, { ...c, _ids: [c.id] });
+      const k = normalizeBrazilianPhone(c.telefone) || c.id;
+      if (byPhone.has(k)) {
+        const group = byPhone.get(k);
+        group._ids.push(c.id);
+        group.clienteFixa ||= c.clienteFixa === true;
+      } else {
+        byPhone.set(k, { ...c, _ids: [c.id] });
+      }
     });
     clientes = [...byPhone.values()];
     agendamentos = ag.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -64,12 +69,14 @@ async function init() {
 }
 
 function enrich(c) {
-  const hist = agendamentos.filter(a => a.clienteId === c.id || a.telefone === c.telefone);
+  const phone = normalizeBrazilianPhone(c.telefone);
+  const hist = agendamentos.filter(a => c._ids.includes(a.clienteId)
+    || (phone && normalizeBrazilianPhone(a.telefone) === phone));
   const done = hist.filter(a => a.status === 'concluido');
   const spent = done.reduce((s, a) => s + (+a.preco || 0), 0);
   const dates = hist.filter(a => a.data).map(a => a.data).sort();
   const lastDone = done.map(a => a.data).filter(Boolean).sort().pop() || null;
-  const isLoyal = hist.some(a => a.status === 'confirmado' || a.status === 'concluido');
+  const isLoyal = c.clienteFixa === true || hist.some(a => a.status === 'confirmado' || a.status === 'concluido');
   return {
     c, hist, done, spent, isLoyal,
     last: dates.length ? dates[dates.length - 1] : null,
@@ -92,9 +99,10 @@ function renderKpis() {
 
 function renderList() {
   const q = cl.q.trim().toLowerCase();
-  const qd = digits(cl.q);
+  const qd = normalizeBrazilianPhone(cl.q);
   const list = enriched.filter(e => {
-    const okQ = !q || (e.c.nome || '').toLowerCase().includes(q) || (qd.length >= 3 && (e.c.telefone || '').includes(qd));
+    const okQ = !q || (e.c.nome || '').toLowerCase().includes(q)
+      || (qd.length >= 3 && normalizeBrazilianPhone(e.c.telefone).includes(qd));
     const okF = cl.filter === 'all' || (cl.filter === 'loyal' && e.isLoyal) || (cl.filter === 'new' && e.isNew) || (cl.filter === 'inactive' && e.inactive);
     return okQ && okF;
   });
@@ -145,7 +153,7 @@ function renderDetail(e) {
   const { c, hist, done, spent } = e;
   const sorted = [...hist].sort((a, b) => (b.data || '').localeCompare(a.data || ''));
   const canceladas = hist.filter(a => a.status === 'cancelado' && a.canceladoPor === 'cliente').length;
-  const reag = hist.reduce((s, a) => s + (+a.reagendamentos || 0), 0);
+  const reag = hist.reduce((sum, appointment) => sum + rescheduleCount(appointment), 0);
   const first = (c.nome || '').split(' ')[0] || '';
   const wa = waLink(c.telefone, `Olá${first ? ', ' + first : ''}! Tudo bem?`);
 
@@ -157,6 +165,10 @@ function renderDetail(e) {
         <p>${formatPhoneDisplay(c.telefone)}${e.last ? ' · última visita ' + br(e.last) : ''}</p>
       </div>
       <div class="cl-head-actions">
+        ${c._ids.length > 1 ? '<span>Cadastro duplicado · revisar</span>'
+          : c.titularUid ? `<span>${c.cadastroElegivel ? 'Cadastro validado' : 'Aguardando confirmação do primeiro horário'}</span>`
+          : '<button type="button" class="btn btn-ghost" id="linkLegacy">Validar cadastro anterior</button>'}
+        <button type="button" class="btn btn-ghost" id="toggleFixed" aria-pressed="${c.clienteFixa === true}">Cliente fixa</button>
         <button type="button" class="cl-del" id="delHistory" aria-label="Apagar histórico" title="Apagar histórico">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
         </button>
@@ -193,8 +205,59 @@ function renderDetail(e) {
     renderList();
   });
 
+  $('linkLegacy')?.addEventListener('click', async event => {
+    if (!window.confirm('A cliente já confirmou o telefone por SMS. Você conferiu, por um registro anterior, que o cadastro pertence a ela?')) return;
+    const button = event.currentTarget;
+    button.disabled = true;
+    try {
+      const token = await auth.currentUser.getIdToken();
+      const response = await fetch('/api/booking', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'client-link', id: c.id, phone: c.telefone, reviewed: true })
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error?.message || 'Não foi possível validar o cadastro.');
+      button.replaceWith(document.createTextNode('Cadastro validado'));
+      toast('Cadastro vinculado e isenção liberada.');
+    } catch (error) {
+      toast(error.message || 'Não foi possível validar o cadastro.');
+      button.disabled = false;
+    }
+  });
+
+  $('toggleFixed').addEventListener('click', async event => {
+    const button = event.currentTarget;
+    const fixed = c.clienteFixa !== true;
+    button.disabled = true;
+    try {
+      const token = await auth.currentUser.getIdToken();
+      const response = await fetch('/api/booking', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'client-eligibility', phone: c.telefone, fixed })
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error?.message);
+      c.clienteFixa = fixed;
+      enriched = clientes.map(enrich);
+      renderKpis();
+      renderList();
+      button.setAttribute('aria-pressed', String(fixed));
+      toast(fixed ? 'Cliente fixa marcada.' : 'Marcação de cliente fixa removida.');
+    } catch (error) {
+      toast(error.message || 'Não foi possível atualizar a cliente.');
+    } finally {
+      button.disabled = false;
+    }
+  });
+
   $('delHistory').addEventListener('click', async () => {
     if (!hist.length) { toast('Essa cliente não tem histórico.'); return; }
+    if (hist.some(item => !['concluido', 'recusado', 'cancelado'].includes(item.status) || item.reembolsoStatus === 'pendente')) {
+      toast('Resolva os horários ativos e reembolsos antes de apagar o histórico.');
+      return;
+    }
     const okH = await confirmDialog({
       title: 'Apagar histórico?',
       text: `Os ${hist.length} agendamento${hist.length === 1 ? '' : 's'} de ${c.nome || 'esta cliente'} serão apagados e deixam de contar no faturamento do dashboard. Não dá para desfazer.`,

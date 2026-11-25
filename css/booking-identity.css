@@ -1,0 +1,20 @@
+.booking-identity-dialog {
+  width: min(35rem, calc(100% - 2rem));
+  max-height: calc(100dvh - 2rem);
+  overflow: auto;
+  padding: clamp(1rem, 4vw, 1.8rem);
+  color: #292125;
+  background: #fff;
+  border: 1px solid #d8c8cf;
+  border-radius: 1rem;
+}
+
+.booking-identity-dialog::backdrop { background: rgb(36 25 32 / 68%); }
+.booking-identity-dialog h2 { margin: 0; }
+.booking-identity-dialog .my-appt-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
+.booking-identity-dialog #bookingCaptcha { max-width: 100%; overflow: auto; }
+.mh-lookup #findAppointments { margin-top: 1rem; }
+.lookup-payment { overflow-wrap: anywhere; }
+.lookup-payment [hidden] { display: none; }
+.lookup-payment .payment-qr { display: block; margin: .75rem 0; object-fit: contain; }
+.lookup-payment .payment-qr[hidden] { display: none; }

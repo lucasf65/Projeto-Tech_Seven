@@ -1,425 +1,646 @@
 'use strict';
-const adminState = { isAdmin: false, adminUid: null };
-let selectedEmoji = '💅';
+
+const adminState = { isAdmin: false };
+const adminEl = id => document.getElementById(id);
+const WEEKDAYS = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+const STATUS_LABELS = {
+  pendente: 'Pendente',
+  'aguardando-sinal': 'Aguardando sinal',
+  confirmado: 'Confirmado',
+  concluido: 'Concluído',
+  recusado: 'Recusado',
+  cancelado: 'Cancelado'
+};
+let openCatalogItem;
 
 document.addEventListener('DOMContentLoaded', () => {
-  if (document.getElementById('serviceModal')) initServiceModal();
+  if (!adminEl('adminLogin')) return;
+  initServiceModal();
   initAdminCalendarModal();
 
-  if (!document.getElementById('adminLogin')) return;
-
-  document.getElementById('adminLoginBtn').addEventListener('click', () => {
-    const email = document.getElementById('adminEmail').value.trim();
-    const pass = document.getElementById('adminPassword').value;
-    if (!email || !pass) return toast('Preencha e-mail e senha.');
+  adminEl('adminLoginBtn').addEventListener('click', () => {
+    const email = adminEl('adminEmail').value.trim();
+    const password = adminEl('adminPassword').value;
+    if (!email || !password) return toast('Preencha e-mail e senha.');
     if (!validEmail(email)) return toast('Informe um e-mail válido.');
-    adminLogin(email, pass);
+    adminLogin(email, password);
   });
 
-  document.getElementById('adminLogout').addEventListener('click', adminLogout);
-  document.getElementById('statusFilter').addEventListener('change', renderAdminAppointments);
-  document.getElementById('dateFilter').addEventListener('change', renderAdminAppointments);
+  adminEl('adminLogout').addEventListener('click', adminLogout);
+  adminEl('statusFilter').addEventListener('change', renderAdminAppointments);
+  adminEl('dateFilter').addEventListener('change', renderAdminAppointments);
+  adminEl('addGal').addEventListener('click', addGaleria);
 
+  if (typeof auth === 'undefined') {
+    adminEl('adminLoginBtn').disabled = true;
+    toast('O acesso ao painel ainda não está configurado.');
+    return;
+  }
   auth.onAuthStateChanged(async user => {
-    if (user) {
-      const d = await db.collection('admins').doc(user.uid).get();
-      if (d.exists) {
-        adminState.isAdmin = true; adminState.adminUid = user.uid;
-        document.getElementById('adminLogin').classList.add('hidden');
-        document.getElementById('adminPanel').classList.remove('hidden');
-        await renderAllAdmin();
-      }
-    } else if (adminState.isAdmin) {
-      adminState.isAdmin = false;
-      document.getElementById('adminPanel').classList.add('hidden');
-      document.getElementById('adminLogin').classList.remove('hidden');
+    try {
+      const access = user && await db.collection('admins').doc(user.uid).get();
+      if (auth.currentUser?.uid !== user?.uid) return;
+      adminState.isAdmin = Boolean(access?.exists);
+      adminEl('adminLogin').classList.toggle('hidden', adminState.isAdmin);
+      adminEl('adminPanel').classList.toggle('hidden', !adminState.isAdmin);
+      if (adminState.isAdmin) await renderAllAdmin();
+    } catch {
+      toast('Não foi possível verificar o acesso ao painel. Tente entrar novamente.');
     }
   });
 });
 
-/* =========================================
-   MODAL DE NOVO SERVIÇO
-   ========================================= */
-function initServiceModal() {
-  const overlayEl = document.getElementById('serviceModal');
-  const emojiBtn = document.getElementById('emojiBtn');
-  const emojiDropdown = document.getElementById('emojiDropdown');
-  if (!overlayEl) return;
-
-  const resetForm = () => {
-    document.getElementById('newServiceName').value = '';
-    document.getElementById('newServiceDesc').value = '';
-    document.getElementById('newServiceHours').value = '';
-    document.getElementById('newServiceMins').value = '';
-    document.getElementById('newServiceFormat').value = 'min';
-    document.getElementById('newServicePrice').value = '';
-    selectedEmoji = '💅';
-    document.getElementById('selectedEmoji').textContent = '💅';
-  };
-
-  const serviceModal = createModal({
-    overlayEl,
-    openBtn: document.getElementById('openServiceModal'),
-    closeBtn: overlayEl.querySelector('.close-modal'),
-    lockScroll: false,
-    onOpen: () => document.getElementById('newServiceName').focus(),
-    onClose: resetForm
+async function adminApi(action, data = {}, write = false) {
+  const user = auth.currentUser;
+  if (!user || !adminState.isAdmin) throw new Error('Entre novamente na área administrativa.');
+  const token = await user.getIdToken();
+  const params = new URLSearchParams(write ? { action } : { action, ...data });
+  const headers = { Authorization: `Bearer ${token}` };
+  const options = { headers, cache: 'no-store' };
+  if (write) {
+    options.method = 'POST';
+    headers['Content-Type'] = 'application/json';
+    options.body = JSON.stringify({ action, ...data });
+  }
+  const response = await fetch(`/api/booking?${params}`, options).catch(() => {
+    throw new Error('Confira sua conexão e tente novamente.');
   });
+  const result = await response.json().catch(() => null);
+  if (!response.ok || !result) {
+    const fallback = response.status === 401 || response.status === 403
+      ? 'Entre novamente com uma conta administrativa.'
+      : 'O serviço está indisponível. Tente novamente em instantes.';
+    throw new Error(result?.error?.message || fallback);
+  }
+  return result;
+}
 
-  emojiBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    emojiDropdown.classList.toggle('hidden');
+function adminFeedback(id, message = '', error = false) {
+  const element = adminEl(id);
+  element.textContent = message;
+  element.classList.toggle('admin-feedback-error', error);
+}
+
+function focusDialog(overlay, element) {
+  requestAnimationFrame(() => {
+    if (overlay.classList.contains('active')) element.focus();
   });
+}
 
-  document.querySelectorAll('.emoji-option').forEach(el => {
-    el.addEventListener('click', () => {
-      selectedEmoji = el.textContent;
-      document.getElementById('selectedEmoji').textContent = selectedEmoji;
-      emojiDropdown.classList.add('hidden');
-    });
-  });
-
-  document.addEventListener('click', (e) => {
-    if (!emojiBtn.contains(e.target) && !emojiDropdown.contains(e.target)) {
-      emojiDropdown.classList.add('hidden');
-    }
-  });
-
-  const formatDuration = () => {
-    const hrs = parseInt(document.getElementById('newServiceHours').value) || 0;
-    const mins = parseInt(document.getElementById('newServiceMins').value) || 0;
-    const format = document.getElementById('newServiceFormat').value;
-
-    if (format === 'h') {
-      const totalHoras = hrs + (mins / 60);
-      return totalHoras > 0 ? `${totalHoras.toFixed(1).replace('.0', '')}h` : '30 min';
-    } else {
-      let result = '';
-      if (hrs > 0) result += `${hrs}h `;
-      if (mins > 0) result += `${mins} min`;
-      if (!result) result = '30 min';
-      return result.trim();
-    }
-  };
-
-  document.getElementById('saveNewService').addEventListener('click', async () => {
-    const saveBtn = document.getElementById('saveNewService');
-    const name = document.getElementById('newServiceName').value.trim().replace(/\s+/g, ' ');
-    const desc = document.getElementById('newServiceDesc').value.trim();
-    const hrs = parseInt(document.getElementById('newServiceHours').value) || 0;
-    const mins = parseInt(document.getElementById('newServiceMins').value) || 0;
-    const priceRaw = document.getElementById('newServicePrice').value;
-    const price = +priceRaw;
-
-    if (name.length < 2 || name.length > 60) return toast('O nome do serviço deve ter de 2 a 60 caracteres.');
-    if (desc.length > 120) return toast('A descrição pode ter até 120 caracteres.');
-    if (hrs < 0 || hrs > 12 || mins < 0 || mins > 59) return toast('Duração inválida: horas de 0 a 12 e minutos de 0 a 59.');
-    if (hrs === 0 && mins === 0) return toast('Informe a duração do serviço.');
-    if (priceRaw === '' || !isFinite(price) || price < 0 || price > 10000) return toast('Informe um preço válido (de R$ 0 a R$ 10.000).');
-    const duration = formatDuration();
-
-    try {
-      saveBtn.disabled = true;
-      saveBtn.textContent = 'Salvando...';
-
-      const snap = await db.collection('servicos').orderBy('id', 'desc').limit(1).get();
-      const maxId = snap.empty ? 0 : (snap.docs[0].data().id || 0);
-      const newId = maxId + 1;
-
-      await db.collection('servicos').doc(newId.toString()).set({
-        id: newId, name, description: desc, duration, price, icon: selectedEmoji
-      });
-
-      serviceModal.close();
-      renderAllAdmin();
-      toast('Serviço criado com sucesso!');
-    } catch(e) {
-      console.error(e);
-      toast('Erro ao criar serviço.');
-    } finally {
-      saveBtn.disabled = false;
-      saveBtn.textContent = 'Salvar Serviço';
+function trapDialogFocus(overlay) {
+  overlay.addEventListener('keydown', event => {
+    if (event.key !== 'Tab') return;
+    const candidates = [...overlay.querySelectorAll('button, input, select, summary, a[href]')];
+    const focusable = candidates.filter(element => !element.disabled && element.getClientRects().length);
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if ((event.shiftKey && document.activeElement === first) || (!event.shiftKey && document.activeElement === last)) {
+      event.preventDefault();
+      (event.shiftKey ? last : first)?.focus();
     }
   });
 }
 
-/* =========================================
-   MODAL DE AGENDA (PREMIUM)
-   ========================================= */
-let adminCal = null;
+function initServiceModal() {
+  const overlay = adminEl('serviceModal');
+  const opener = adminEl('openServiceModal');
+  const form = adminEl('serviceForm');
+  const save = adminEl('saveNewService');
+  let editingId = null;
+  let trigger = opener;
+
+  const dialog = createModal({
+    overlayEl: overlay,
+    closeBtn: overlay.querySelector('.close-modal'),
+    lockScroll: true,
+    onOpen: () => focusDialog(overlay, adminEl('newServiceName')),
+    onClose: () => (trigger.isConnected ? trigger : opener).focus()
+  });
+  trapDialogFocus(overlay);
+
+  openCatalogItem = (item = {}, button = opener) => {
+    if (save.disabled) return;
+    trigger = button;
+    editingId = item.id ?? null;
+    form.reset();
+    adminEl('serviceModalTitle').textContent = editingId === null ? 'Novo item do catálogo' : 'Editar item do catálogo';
+    adminEl('newServiceName').value = item.name ?? '';
+    adminEl('newServiceKind').value = item.kind === 'pacote' ? 'pacote' : 'servico';
+    adminEl('newServiceDesc').value = item.description ?? '';
+    adminEl('newServiceDuration').value = item.duration ?? '';
+    adminEl('newServicePrice').value = item.price ?? '';
+    adminEl('newServiceIcon').value = item.icon || '💅';
+    adminEl('newServiceImage').value = item.image ?? '';
+    adminFeedback('serviceFeedback');
+    dialog.open();
+  };
+  opener.addEventListener('click', () => openCatalogItem());
+
+  form.addEventListener('submit', async event => {
+    event.preventDefault();
+    if (save.disabled) return;
+    const service = {
+      name: adminEl('newServiceName').value.trim().replace(/\s+/g, ' '),
+      description: adminEl('newServiceDesc').value.trim(),
+      duration: adminEl('newServiceDuration').value.trim(),
+      price: adminEl('newServicePrice').valueAsNumber,
+      icon: adminEl('newServiceIcon').value.trim() || '💅',
+      image: adminEl('newServiceImage').value.trim(),
+      kind: adminEl('newServiceKind').value
+    };
+    if (editingId !== null) service.id = editingId;
+    save.disabled = true;
+    adminFeedback('serviceFeedback', 'Salvando…');
+    try {
+      await adminApi('service', { operation: editingId === null ? 'create' : 'update', service }, true);
+      dialog.close();
+      await renderAdminServices();
+      opener.focus();
+      toast('Item salvo no catálogo.');
+    } catch (error) {
+      if (dialog.isOpen()) adminFeedback('serviceFeedback', error.message, true);
+      else toast(error.message);
+    } finally {
+      save.disabled = false;
+    }
+  });
+}
+
+function addHoursRow(container, label, values = ['', '']) {
+  const row = document.createElement('div');
+  row.className = 'agenda-hours-row';
+  row.innerHTML = `
+    <label>Início <input type="time" required></label>
+    <label>Fim <input type="time" required></label>
+    <button class="tiny danger" type="button">Remover</button>`;
+  const [start, end] = row.querySelectorAll('input');
+  start.value = values[0];
+  end.value = values[1] === '24:00' ? '00:00' : values[1];
+  start.setAttribute('aria-label', `Início do período de ${label}`);
+  end.setAttribute('aria-label', `Fim do período de ${label}`);
+  const remove = row.querySelector('button');
+  remove.setAttribute('aria-label', `Remover período de ${label}`);
+  remove.addEventListener('click', () => {
+    row.remove();
+    container.dispatchEvent(new Event('change', { bubbles: true }));
+    container.parentElement.querySelector('.agenda-add-period, #addExceptionWindow')?.focus();
+  });
+  container.appendChild(row);
+  return start;
+}
+
+function readHours(container) {
+  return [...container.querySelectorAll('.agenda-hours-row')].map(row => {
+    const [start, end] = [...row.querySelectorAll('input')].map(input => input.value);
+    return [start, end === '00:00' ? '24:00' : end];
+  });
+}
+
+function startingTimes(windows) {
+  const times = new Set();
+  for (const [start, end] of windows) {
+    if (!start || !end || start >= end) continue;
+    const [hour, minute] = start.split(':').map(Number);
+    const [lastHour, lastMinute] = end.split(':').map(Number);
+    for (let value = hour * 60 + minute; value < lastHour * 60 + lastMinute; value += 60) {
+      times.add(`${String(Math.floor(value / 60)).padStart(2, '0')}:${String(value % 60).padStart(2, '0')}`);
+    }
+  }
+  return [...times].sort();
+}
 
 function initAdminCalendarModal() {
-  const overlayEl = document.getElementById('agendaModal');
-  const hiddenDateInput = document.getElementById('availDate');
-  if (!overlayEl || !hiddenDateInput) return;
+  const overlay = adminEl('agendaModal');
+  const opener = adminEl('openAgendaModal');
+  const dateInput = adminEl('availDate');
+  const daily = adminEl('exceptionForm');
+  const weekly = adminEl('weeklyForm');
+  const weeklyEditor = adminEl('weeklyEditor');
+  const weeklyHours = adminEl('weeklyHours');
+  const mode = adminEl('exceptionMode');
+  const specialHours = adminEl('specialHours');
+  const specialRows = adminEl('exceptionWindows');
+  const blockedSlots = adminEl('blockedSlots');
+  const retry = adminEl('retrySchedule');
+  let calendar;
+  let schedule;
+  let requestNumber = 0;
+  let saving = false;
+  let blocked = new Set();
+  dateInput.value = keyDate(new Date());
 
-  hiddenDateInput.value = keyDate(new Date());
+  function renderBlocks() {
+    const weekday = new Date(dateInput.value + 'T12:00:00').getDay();
+    const slots = mode.value === 'special'
+      ? startingTimes(readHours(specialRows))
+      : schedule?.weekly?.[weekday] ? startingTimes(schedule.weekly[weekday]) : schedule?.starts ?? [];
+    const container = adminEl('modalAvailability');
+    container.replaceChildren();
+    for (const time of [...new Set([...slots, ...blocked])].sort()) {
+      const label = document.createElement('label');
+      const input = document.createElement('input');
+      input.type = 'checkbox';
+      input.checked = blocked.has(time);
+      input.addEventListener('change', () => {
+        if (input.checked) blocked.add(time);
+        else blocked.delete(time);
+      });
+      label.append(input, document.createTextNode(time));
+      container.appendChild(label);
+    }
+    if (!container.childElementCount) container.textContent = 'Nenhum horário neste dia.';
+  }
 
-  const agendaModal = createModal({
-    overlayEl,
-    openBtn: document.getElementById('openAgendaModal'),
-    closeBtn: document.getElementById('closeAgendaModal'),
-    extraCloseBtns: [document.getElementById('doneAgendaModal')],
+  function changeMode() {
+    specialHours.hidden = mode.value !== 'special';
+    blockedSlots.hidden = mode.value === 'closed';
+    if (mode.value === 'special' && !specialRows.childElementCount) {
+      addHoursRow(specialRows, 'horários especiais');
+    }
+    specialRows.querySelectorAll('input').forEach(input => {
+      input.disabled = specialHours.hidden;
+    });
+    if (!blockedSlots.hidden) renderBlocks();
+  }
+
+  function renderWeekly() {
+    weeklyHours.replaceChildren();
+    WEEKDAYS.forEach((day, index) => {
+      const group = document.createElement('fieldset');
+      const legend = document.createElement('legend');
+      const hours = document.createElement('div');
+      const add = document.createElement('button');
+      group.className = 'agenda-day';
+      legend.textContent = day;
+      hours.dataset.weekday = index;
+      add.type = 'button';
+      add.className = 'tiny agenda-add-period';
+      add.textContent = 'Adicionar período';
+      add.setAttribute('aria-label', `Adicionar período em ${day}`);
+      add.addEventListener('click', () => addHoursRow(hours, day).focus());
+      for (const window of schedule.weekly[index] ?? []) addHoursRow(hours, day, window);
+      group.append(legend, hours, add);
+      weeklyHours.appendChild(group);
+    });
+  }
+
+  async function loadSchedule() {
+    const date = dateInput.value;
+    const currentLoad = ++requestNumber;
+    const weekday = new Date(date + 'T12:00:00').getDay();
+    adminEl('modalSelectedDate').textContent = br(date);
+    daily.hidden = true;
+    weeklyEditor.hidden = true;
+    retry.hidden = true;
+    adminFeedback('exceptionFeedback');
+    adminFeedback('weeklyFeedback');
+    adminFeedback('scheduleFeedback', 'Carregando a agenda…');
+    try {
+      const result = await adminApi('schedule', { date });
+      if (currentLoad !== requestNumber) return;
+      schedule = { ...result, weekly: result.weekly ?? result.defaultWeekly ?? {} };
+      const standard = schedule.weekly[weekday] ?? [];
+      adminEl('standardHours').textContent = standard.length
+        ? `Horários semanais: ${standard.map(([start, end]) => `${start}–${end}`).join(', ')}.`
+        : 'A agenda semanal está fechada neste dia.';
+      const exception = schedule.exception;
+      const windows = exception?.windows;
+      mode.value = windows == null ? 'regular' : windows.length ? 'special' : 'closed';
+      blocked = new Set(exception?.closed ?? []);
+      specialRows.replaceChildren();
+      for (const window of windows ?? []) addHoursRow(specialRows, 'horários especiais', window);
+      const appointments = schedule.appointments ?? schedule.conflicts ?? [];
+      const occupied = appointments.map(item => (
+        typeof item === 'string' ? item : [item.time ?? item.horario, item.service ?? item.servico].filter(Boolean).join(' ')
+      )).filter(Boolean);
+      adminEl('dayAppointments').textContent = occupied.length
+        ? `Solicitações e atendimentos que ocupam a agenda: ${occupied.join(', ')}.`
+        : 'Nenhuma solicitação ou atendimento ocupando esta data.';
+      changeMode();
+      renderWeekly();
+      daily.hidden = false;
+      weeklyEditor.hidden = false;
+      adminFeedback('scheduleFeedback');
+      return true;
+    } catch (error) {
+      if (currentLoad !== requestNumber) return;
+      adminFeedback('scheduleFeedback', error.message, true);
+      retry.hidden = false;
+    }
+  }
+
+  async function saveSchedule(action, data, feedbackId, form) {
+    if (saving) return;
+    saving = true;
+    const buttons = [daily.querySelector('button[type=submit]'), weekly.querySelector('button[type=submit]')];
+    for (const button of buttons) button.disabled = true;
+    form.setAttribute('aria-busy', 'true');
+    adminFeedback(feedbackId, 'Salvando…');
+    const calendarBox = overlay.querySelector('.modal-calendar-box');
+    calendarBox.inert = true;
+    daily.inert = true;
+    weekly.inert = true;
+    try {
+      await adminApi(action, data, true);
+      if (await loadSchedule()) adminFeedback('scheduleFeedback', 'Horários atualizados.');
+    } catch (error) {
+      adminFeedback(feedbackId, error.message, true);
+    } finally {
+      saving = false;
+      calendarBox.inert = false;
+      daily.inert = false;
+      weekly.inert = false;
+      for (const button of buttons) button.disabled = false;
+      form.removeAttribute('aria-busy');
+      if (dialog.isOpen()) form.querySelector('button[type=submit]').focus();
+    }
+  }
+
+  const dialog = createModal({
+    overlayEl: overlay,
+    openBtn: opener,
+    closeBtn: adminEl('closeAgendaModal'),
+    extraCloseBtns: [adminEl('doneAgendaModal')],
     lockScroll: true,
     onOpen: () => {
-      if (!adminCal) {
-        adminCal = createCalendar({
-          gridEl: document.getElementById('adminCalendarGrid'),
-          monthLabelEl: document.getElementById('adminCalMonth'),
-          yearLabelEl: document.getElementById('adminCalYear'),
-          prevBtn: document.getElementById('adminPrevMonth'),
-          nextBtn: document.getElementById('adminNextMonth'),
-          disablePast: false,
-          selectedDate: hiddenDateInput.value,
-          onSelect: (k) => { hiddenDateInput.value = k; renderAvailability(); }
+      if (!calendar) {
+        calendar = createCalendar({
+          gridEl: adminEl('adminCalendarGrid'),
+          monthLabelEl: adminEl('adminCalMonth'),
+          yearLabelEl: adminEl('adminCalYear'),
+          prevBtn: adminEl('adminPrevMonth'),
+          nextBtn: adminEl('adminNextMonth'),
+          selectedDate: dateInput.value,
+          onSelect: date => { dateInput.value = date; loadSchedule(); }
         });
-      } else {
-        adminCal.render();
       }
-      renderAvailability();
-    }
+      loadSchedule();
+      focusDialog(overlay, adminEl('closeAgendaModal'));
+    },
+    onClose: () => opener.focus()
   });
-
-  window.__openAgendaModal = agendaModal.open;
+  trapDialogFocus(overlay);
+  window.__openAgendaModal = dialog.open;
+  retry.addEventListener('click', loadSchedule);
+  mode.addEventListener('change', changeMode);
+  specialRows.addEventListener('change', renderBlocks);
+  adminEl('addExceptionWindow').addEventListener('click', () => addHoursRow(specialRows, 'horários especiais').focus());
+  daily.addEventListener('submit', event => {
+    event.preventDefault();
+    const windows = mode.value === 'regular' ? null : mode.value === 'closed' ? [] : readHours(specialRows);
+    if (mode.value === 'special' && !windows.length) {
+      adminFeedback('exceptionFeedback', 'Adicione um período ou escolha fechar o dia.', true);
+      return;
+    }
+    saveSchedule('exception', { date: dateInput.value, windows, closed: [...blocked] }, 'exceptionFeedback', daily);
+  });
+  weekly.addEventListener('submit', event => {
+    event.preventDefault();
+    const hours = Object.fromEntries([...weeklyHours.querySelectorAll('[data-weekday]')]
+      .map(container => [container.dataset.weekday, readHours(container)]));
+    saveSchedule('weekly', { weekly: hours }, 'weeklyFeedback', weekly);
+  });
 }
 
-async function renderAvailability() {
-  const d = document.getElementById('availDate').value || keyDate(new Date());
-  const r = document.getElementById('modalAvailability');
-  if (!r) return;
-
-  const dateObj = new Date(d + 'T12:00:00');
-  const formattedDate = dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
-  const elDate = document.getElementById('modalSelectedDate');
-  if (elDate) elDate.textContent = formattedDate;
-
-  r.innerHTML = '<div style="font-size:12px; color:var(--muted); grid-column:1/-1; text-align:center; padding: 20px;">Buscando...</div>';
-
+async function adminLogin(email, password) {
+  const button = adminEl('adminLoginBtn');
+  button.disabled = true;
   try {
-    const busy = await Promise.all(SLOTS.map(t => isSlotBusy(d, t)));
-    const closed = await Promise.all(SLOTS.map(t => isSlotClosed(d, t)));
-
-    r.innerHTML = '';
-
-    SLOTS.forEach((t, i) => {
-      const b = document.createElement('button');
-      const isOff = busy[i] || closed[i];
-
-      b.className = 'slot' + (isOff ? ' off' : '');
-      b.textContent = t;
-      b.disabled = busy[i];
-
-      b.addEventListener('click', async (e) => {
-        e.preventDefault();
-        if (b.disabled) return;
-
-        const isCurrentlyOff = b.classList.contains('off');
-        if (isCurrentlyOff) b.classList.remove('off'); else b.classList.add('off');
-        b.style.opacity = '0.5';
-
-        try {
-          const ref = db.collection('disponibilidades').doc(d);
-          const doc = await ref.get();
-          let list = doc.exists ? (doc.data().closed || []) : [];
-          list = isCurrentlyOff ? list.filter(x => x !== t) : [...list, t];
-          await ref.set({ closed: list }, { merge: true });
-        } catch(err) {
-          console.error(err);
-          if (isCurrentlyOff) b.classList.add('off'); else b.classList.remove('off');
-          toast('Erro ao salvar no Firebase.');
-        } finally {
-          b.style.opacity = '1';
-        }
-      });
-      r.appendChild(b);
-    });
-  } catch(e) {
-    console.error(e);
-    r.innerHTML = '<div class="empty" style="font-size:12px;grid-column:1/-1; text-align:center;">Erro ao carregar horários.</div>';
+    const { user } = await auth.signInWithEmailAndPassword(email, password);
+    const access = await db.collection('admins').doc(user.uid).get();
+    if (!access.exists) {
+      await auth.signOut();
+      toast('Sua conta não tem acesso a este painel.');
+      return;
+    }
+    adminEl('adminEmail').value = '';
+    adminEl('adminPassword').value = '';
+    toast('Bem-vinda, Carol!');
+  } catch {
+    toast('Não foi possível entrar. Confira o e-mail e a senha.');
+  } finally {
+    button.disabled = false;
   }
 }
 
-/* =========================================
-   AUTENTICAÇÃO E RENDERIZAÇÃO GERAL
-   ========================================= */
-async function adminLogin(email, password) {
+async function adminLogout() {
   try {
-    const r = await auth.signInWithEmailAndPassword(email, password);
-    const d = await db.collection('admins').doc(r.user.uid).get();
-    if (!d.exists) { await auth.signOut(); toast('Usuário não autorizado.'); return; }
-    document.getElementById('adminEmail').value = '';
-    document.getElementById('adminPassword').value = '';
-    toast('Bem-vinda, Carol!');
-  } catch(e) { console.error(e); toast('Erro ao fazer login.'); }
+    await auth.signOut();
+    adminFeedback('adminAppointmentStatus');
+    toast('Você saiu do painel.');
+  } catch {
+    toast('Não foi possível sair agora. Tente novamente.');
+  }
 }
 
-async function adminLogout() { await auth.signOut(); toast('Logout realizado.'); }
-
 async function renderAllAdmin() {
-  await renderStats();
-  await populateDateFilter();
-  await renderAdminAppointments();
-  await renderAdminServices();
-  await renderRevenue();
+  await Promise.all([
+    renderStats(), populateDateFilter(), renderAdminAppointments(),
+    renderAdminServices(), renderRevenue(), renderAdminGaleria()
+  ]);
 }
 
 async function renderStats() {
   try {
-    const [p, ag, h] = await Promise.all([
+    const [pending, awaiting, today] = await Promise.all([
       db.collection('agendamentos').where('status', '==', 'pendente').get(),
       db.collection('agendamentos').where('status', '==', 'aguardando-sinal').get(),
       db.collection('agendamentos').where('data', '==', keyDate(new Date())).where('status', '==', 'confirmado').get()
     ]);
-    document.getElementById('stats').innerHTML = `
-      <div class="stat"><b>${p.size}</b><span>Pendentes</span></div>
-      <div class="stat"><b>${ag.size}</b><span>Aguardando sinal</span></div>
-      <div class="stat"><b>${h.size}</b><span>Confirmados hoje</span></div>`;
-  } catch(e) { console.error(e); }
-}
-
-async function populateDateFilter() {
-  const sel = document.getElementById('dateFilter'); const cur = sel.value;
-  try {
-    const snap = await db.collection('agendamentos').orderBy('data').get();
-    const dates = [...new Set(snap.docs.map(d => d.data().data))].filter(Boolean).sort();
-    sel.innerHTML = '<option value="all">Todas as datas</option>' + dates.map(d => `<option value="${d}">${br(d)}</option>`).join('');
-    if (dates.includes(cur)) sel.value = cur;
-  } catch(e) { console.error(e); }
-}
-
-async function renderAdminAppointments() {
-  const statusF = document.getElementById('statusFilter').value;
-  const dateF = document.getElementById('dateFilter').value;
-  const r = document.getElementById('adminAppointments');
-
-  try {
-    // Sem orderBy na consulta: filtrar por status + ordenar por criadoEm exigiria um índice composto no Firestore.
-    let q = db.collection('agendamentos');
-    if (statusF !== 'all') q = q.where('status', '==', statusF);
-    const snap = await q.get();
-    const ts = a => (a.criadoEm && a.criadoEm.toMillis) ? a.criadoEm.toMillis() : 0;
-    let list = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((x, y) => ts(y) - ts(x));
-
-    if (dateF && dateF !== 'all') list = list.filter(a => a.data === dateF);
-    if (!list.length) { r.innerHTML = '<div class="empty">Nenhuma solicitação encontrada.</div>'; return; }
-
-    r.innerHTML = '';
-    list.forEach(a => {
-      const el = document.createElement('article'); el.className = 'appointment';
-      let actions = '';
-      const pixTag = a.deposito === 'pago' ? ' · <b>PIX informado</b>' : '';
-
-      if (a.status === 'pendente') {
-        actions = `<button class="tiny go approve">Aprovar</button><button class="tiny danger refuse">Recusar</button>`;
-      } else if (a.status === 'aguardando-sinal') {
-        actions = `<a class="tiny wa" target="_blank" rel="noopener" href="${waLink(a.telefone, `Oi ${a.nome}! Sua reserva de ${a.servico} em ${br(a.data)} às ${a.horario} foi aprovada. Sinal de R$ ${SINAL}.`)}">Cobrar sinal</a>
-                   <button class="tiny go deposit">Sinal recebido</button>
-                   <button class="tiny danger refuse">Recusar</button>`;
-      } else if (a.status === 'confirmado') {
-        actions = `<a class="tiny wa" target="_blank" rel="noopener" href="${waLink(a.telefone, `Oi ${a.nome}! Lembrete do seu ${a.servico} em ${br(a.data)} às ${a.horario}.`)}">Lembrete</a>
-                   <button class="tiny go complete">Concluir</button>
-                   <button class="tiny danger cancel">Cancelar</button>`;
-      }
-
-      el.innerHTML = `
-        <div class="appointment-head">
-          <div><h3>${esc(a.servico)}</h3>
-            <p>${esc(a.nome)} · ${formatPhoneDisplay(a.telefone)}</p>
-            <p>${br(a.data)} às <b>${a.horario}</b> · ${money(a.preco)}${a.reagendamentos ? ` · ${a.reagendamentos}x reagendado` : ''}${pixTag}</p></div>
-          <span class="badge ${a.status}">${a.status.replace('-', ' ')}</span>
-        </div>
-        <div class="actions">${actions}</div>`;
-
-      const on = (sel, fn) => { const b = el.querySelector(sel); if (b) b.addEventListener('click', fn); };
-      on('.approve', () => approveAppointment(a.id));
-      on('.refuse', () => updateAppointment(a.id, { status: 'recusado' }, 'Recusado.'));
-      on('.deposit', () => updateAppointment(a.id, { status: 'confirmado', deposito: 'pago' }, 'Confirmado!'));
-      on('.complete', () => updateAppointment(a.id, { status: 'concluido' }, 'Concluído.'));
-      on('.cancel', () => updateAppointment(a.id, { status: 'cancelado', canceladoPor: 'carol' }, 'Cancelado.'));
-      r.appendChild(el);
-    });
-  } catch(e) {
-    console.error(e);
-    r.innerHTML = '<div class="empty">Erro ao carregar agendamentos.</div>';
+    adminEl('stats').innerHTML = `
+      <div class="stat"><b>${pending.size}</b><span>Pendentes</span></div>
+      <div class="stat"><b>${awaiting.size}</b><span>Aguardando sinal</span></div>
+      <div class="stat"><b>${today.size}</b><span>Confirmados hoje</span></div>`;
+  } catch {
+    adminEl('stats').textContent = 'Não foi possível carregar o resumo de hoje.';
   }
 }
 
-async function approveAppointment(id) {
+async function populateDateFilter() {
+  const select = adminEl('dateFilter');
   try {
-    const d = await db.collection('agendamentos').doc(id).get(); const a = d.data();
-    const snap = await db.collection('agendamentos').where('telefone', '==', a.telefone)
-      .where('status', 'in', ['confirmado', 'concluido']).get();
-    if (!snap.empty) await updateAppointment(id, { status: 'confirmado', deposito: 'nao-aplicavel', isLoyal: true }, 'Aprovado — cliente fidelizada.');
-    else await updateAppointment(id, { status: 'aguardando-sinal', deposito: 'pendente', isLoyal: false }, 'Aprovado! Combine o sinal.');
-  } catch(e) { console.error(e); toast('Erro ao aprovar.'); }
+    const snap = await db.collection('agendamentos').orderBy('data').get();
+    const dates = [...new Set(snap.docs.map(doc => doc.data().data))]
+      .filter(date => typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date))
+      .sort();
+    const previous = select.value;
+    select.replaceChildren(new Option('Todas as datas', 'all'), ...dates.map(date => new Option(br(date), date)));
+    if (dates.includes(previous)) select.value = previous;
+  } catch {
+    adminFeedback('adminAppointmentStatus', 'Não foi possível atualizar o filtro por data.', true);
+  }
 }
 
-async function updateAppointment(id, changes, msg) {
+let appointmentLoadId = 0;
+
+async function renderAdminAppointments() {
+  const loadId = ++appointmentLoadId;
+  const status = adminEl('statusFilter').value;
+  const date = adminEl('dateFilter').value;
+  const container = adminEl('adminAppointments');
+  container.setAttribute('aria-busy', 'true');
+  container.innerHTML = '<p class="empty">Carregando solicitações…</p>';
+
   try {
-    await db.collection('agendamentos').doc(id).update(changes);
-    toast(msg); await renderAllAdmin();
-  } catch(e) { console.error(e); toast('Erro ao atualizar.'); }
+    let query = db.collection('agendamentos');
+    if (status !== 'all') query = query.where('status', '==', status);
+    if (date && date !== 'all') query = query.where('data', '==', date);
+    const snapshot = await query.get();
+    if (loadId !== appointmentLoadId) return;
+    const appointments = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+    appointments.sort((a, b) => (b.criadoEm?.toMillis?.() || 0) - (a.criadoEm?.toMillis?.() || 0));
+    if (appointments.length) container.replaceChildren(...appointments.map(appointmentRow));
+    else container.innerHTML = '<p class="empty">Nenhuma solicitação encontrada com estes filtros.</p>';
+  } catch {
+    if (loadId === appointmentLoadId) {
+      container.innerHTML = '<p class="empty" role="status">Não foi possível carregar as solicitações.</p>';
+    }
+  } finally {
+    if (loadId === appointmentLoadId) container.removeAttribute('aria-busy');
+  }
+}
+
+function appointmentRow(appointment) {
+  const row = document.createElement('article');
+  row.className = 'appointment';
+  const status = STATUS_LABELS[appointment.status] ? appointment.status : '';
+  const pix = appointment.sinalVerificadoEm
+    ? ' · <b>Sinal verificado</b>'
+    : ['informado', 'pago'].includes(appointment.pixStatus) ? ' · <b>Cliente informou o PIX</b>' : '';
+  const refund = appointment.reembolsoStatus === 'pendente' ? '<p><strong>Reembolso pendente</strong></p>' : '';
+  const change = appointment.trocaEmAnalise ? '<p>Troca de horário em análise</p>'
+    : appointment.reagendamentoPendente ? '<p>Reserva original mantida durante a análise da troca</p>' : '';
+  const count = Number(appointment.reagendamentos) || 0;
+  row.innerHTML = `
+    <div class="appointment-head">
+      <div>
+        <h3>${esc(appointment.servico)}</h3>
+        <p>${esc(appointment.nome)} · ${formatPhoneDisplay(appointment.telefone)}</p>
+        <p>${br(appointment.data)} às <b>${esc(appointment.horario)}</b> · ${money(appointment.preco)}${count ? ` · ${count}x reagendado` : ''}${pix}</p>
+        ${change}${refund}
+      </div>
+      <span class="badge ${status}">${STATUS_LABELS[status] ?? 'Status desconhecido'}</span>
+    </div>
+    <div class="actions"></div>`;
+  const actions = row.querySelector('.actions');
+
+  function addAction(label, nextStatus, role) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = `tiny ${role}`;
+    button.textContent = label;
+    button.addEventListener('click', async () => {
+      const buttons = actions.querySelectorAll('button');
+      for (const item of buttons) item.disabled = true;
+      adminFeedback('adminAppointmentStatus', 'Atualizando a solicitação…');
+      try {
+        const result = await adminApi('status', { id: appointment.id, status: nextStatus }, true);
+        const updatedStatus = STATUS_LABELS[result.appointment?.status ?? result.status];
+        adminFeedback('adminAppointmentStatus', updatedStatus ? `Novo status: ${updatedStatus}.` : 'Status atualizado.');
+        await Promise.all([renderAdminAppointments(), renderStats(), renderRevenue()]);
+      } catch (error) {
+        adminFeedback('adminAppointmentStatus', error.message, true);
+      } finally {
+        for (const item of buttons) item.disabled = false;
+      }
+    });
+    actions.appendChild(button);
+  }
+
+  function addWhatsApp(label, message) {
+    const link = document.createElement('a');
+    link.className = 'tiny wa';
+    link.href = waLink(appointment.telefone, message);
+    link.target = '_blank';
+    link.rel = 'noopener';
+    link.textContent = label;
+    actions.appendChild(link);
+  }
+
+  if (appointment.reembolsoStatus === 'pendente') addAction('Registrar reembolso já resolvido', 'resolver-reembolso', 'go');
+  if (appointment.reagendamentoPendente) return row;
+  if (status === 'pendente') {
+    addAction('Aprovar', 'aprovar', 'go');
+    addAction('Recusar', 'recusado', 'danger');
+    addAction('Cancelar', 'cancelado', 'danger');
+  } else if (status === 'aguardando-sinal') {
+    addWhatsApp('Cobrar sinal', `Oi ${appointment.nome}! A solicitação de ${appointment.servico} em ${br(appointment.data)} às ${appointment.horario} está aguardando o sinal de R$ ${SINAL}.`);
+    addAction('Confirmar sinal recebido', 'confirmado', 'go');
+    addAction('Recusar', 'recusado', 'danger');
+    addAction('Cancelar', 'cancelado', 'danger');
+  } else if (status === 'confirmado') {
+    addWhatsApp('Lembrar pelo WhatsApp', `Oi ${appointment.nome}! Lembrete do seu horário de ${appointment.servico} em ${br(appointment.data)} às ${appointment.horario}.`);
+    addAction('Concluir', 'concluido', 'go');
+    addAction('Cancelar', 'cancelado', 'danger');
+  }
+  return row;
 }
 
 async function renderAdminServices() {
-  const r = document.getElementById('adminServices');
-  r.innerHTML = '<div class="empty" style="font-size:12px;padding:10px">Carregando...</div>';
-
+  const container = adminEl('adminServices');
+  container.setAttribute('aria-busy', 'true');
+  container.innerHTML = '<p class="empty">Carregando o catálogo…</p>';
   try {
-    const snap = await db.collection('servicos').orderBy('id').get();
-    r.innerHTML = '';
-
-    if (snap.empty) { r.innerHTML = '<div class="empty">Nenhum serviço cadastrado.</div>'; return; }
-
-    snap.docs.forEach(doc => {
-      const s = doc.data();
-      const row = document.createElement('div');
-      row.className = 'admin-service';
-      row.innerHTML = `
-        <input data-field="name" value="${esc(s.name)}" placeholder="Nome do serviço">
-        <input data-field="duration" value="${esc(s.duration)}" placeholder="Tempo">
-        <input data-field="price" type="number" value="${s.price}" placeholder="R$">
-        <button class="tiny danger remove" title="Excluir">✕</button>`;
-
-      row.querySelectorAll('input').forEach(inp => {
-        inp.addEventListener('change', async () => {
-          const field = inp.dataset.field;
-          let v = inp.value.trim();
-          let err = '';
-          if (field === 'price') {
-            const n = +inp.value;
-            if (inp.value === '' || !isFinite(n) || n < 0 || n > 10000) err = 'Preço inválido (de R$ 0 a R$ 10.000).';
-            else v = n;
-          } else if (field === 'name') {
-            v = v.replace(/\s+/g, ' ');
-            if (v.length < 2 || v.length > 60) err = 'O nome deve ter de 2 a 60 caracteres.';
-          } else if (field === 'duration') {
-            if (v.length < 1 || v.length > 20) err = 'Informe a duração (ex.: 1h 30 min).';
-          }
-          if (err) { inp.value = s[field]; return toast(err); }
-          try {
-            await db.collection('servicos').doc(s.id.toString()).update({ [field]: v });
-            s[field] = v; inp.value = v;
-            toast('Serviço atualizado!');
-          } catch(e) { console.error(e); inp.value = s[field]; toast('Erro ao atualizar serviço.'); }
+    const { services } = await adminApi('services', { admin: 1 });
+    container.replaceChildren();
+    if (!services.length) {
+      const empty = document.createElement('p');
+      empty.textContent = 'Nenhum item no catálogo.';
+      empty.className = 'empty';
+      const seed = catalogButton('Cadastrar serviços iniciais', 'go', () => changeCatalog('seed', {}, seed));
+      container.append(empty, seed);
+    } else {
+      for (const item of services) {
+        const archived = item.active === false || Boolean(item.archived);
+        const row = document.createElement('div');
+        const details = document.createElement('div');
+        row.className = 'admin-service catalog-row';
+        details.innerHTML = `<strong>${esc(item.name)}</strong>
+          <p>${item.kind === 'pacote' ? 'Pacote' : 'Serviço'} · ${esc(item.duration)} · ${money(item.price)}${archived ? ' · Arquivado' : ''}</p>`;
+        const controls = document.createElement('div');
+        controls.className = 'catalog-actions';
+        const edit = catalogButton('Editar', '', () => openCatalogItem(item, edit));
+        const action = catalogButton(archived ? 'Reativar' : 'Arquivar', archived ? 'go' : 'danger', () => {
+          if (!archived && !confirm(`Arquivar ${item.name}? O histórico dos atendimentos será mantido.`)) return;
+          changeCatalog(archived ? 'restore' : 'archive', { id: item.id }, action);
         });
-      });
+        controls.append(edit, action);
+        row.append(details, controls);
+        container.appendChild(row);
+      }
+    }
+  } catch {
+    container.replaceChildren();
+    const message = document.createElement('p');
+    message.className = 'empty';
+    message.setAttribute('role', 'status');
+    message.textContent = 'Não foi possível carregar o catálogo.';
+    container.append(message, catalogButton('Carregar novamente', '', renderAdminServices));
+  } finally {
+    container.removeAttribute('aria-busy');
+  }
+}
 
-      row.querySelector('.remove').addEventListener('click', async () => {
-        if (snap.size <= 1) return toast('Mantenha ao menos um serviço.');
-        if (confirm('Tem certeza que deseja remover este serviço?')) {
-          try {
-            await db.collection('servicos').doc(s.id.toString()).delete();
-            renderAllAdmin();
-            toast('Serviço removido.');
-          } catch(e) { console.error(e); toast('Erro ao remover.'); }
-        }
-      });
-      r.appendChild(row);
-    });
-  } catch(e) {
-    console.error(e);
-    r.innerHTML = '<div class="empty">Erro ao carregar catálogo.</div>';
+function catalogButton(text, role, onClick) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = `tiny ${role}`;
+  button.textContent = text;
+  button.addEventListener('click', onClick);
+  return button;
+}
+
+async function changeCatalog(operation, data, button) {
+  button.disabled = true;
+  try {
+    await adminApi('service', { operation, ...data }, true);
+    await renderAdminServices();
+    adminEl('openServiceModal').focus();
+    toast('Catálogo atualizado.');
+  } catch (error) {
+    toast(error.message);
+  } finally {
+    button.disabled = false;
   }
 }
 
@@ -430,4 +651,47 @@ async function renderRevenue() {
     document.getElementById('completedCount').textContent = snap.size;
     document.getElementById('revenue').textContent = money(total);
   } catch(e) { console.error(e); }
+}
+
+async function renderAdminGaleria() {
+  const r = document.getElementById('adminGaleria');
+  try {
+    const snap = await db.collection('galeria').orderBy('ordem').get();
+    if (snap.empty) { r.innerHTML = '<div class="empty" style="font-size:12px;padding:10px">Nenhuma foto cadastrada.</div>'; return; }
+    r.innerHTML = '';
+    snap.docs.forEach(doc => {
+      const g = { id: doc.id, ...doc.data() };
+      const row = document.createElement('div'); row.className = 'admin-service';
+      row.innerHTML = `
+        <img src="${esc(g.url)}" alt="" style="width:44px;height:44px;object-fit:cover;border-radius:8px">
+        <span style="flex:1;font-size:12px;word-break:break-all">${esc(g.alt || g.url)}</span>
+        <button class="tiny danger">✕</button>`;
+      row.querySelector('button').addEventListener('click', async () => {
+        if (confirm('Remover esta foto?')) {
+          try {
+            await db.collection('galeria').doc(g.id).delete();
+            renderAdminGaleria();
+            toast('Foto removida.');
+          } catch(e) { console.error(e); toast('Erro ao remover foto.'); }
+        }
+      });
+      r.appendChild(row);
+    });
+  } catch(e) { console.error(e); }
+}
+
+async function addGaleria() {
+  const url = document.getElementById('galUrl').value.trim();
+  const alt = document.getElementById('galAlt').value.trim();
+  if (!url) return toast('Informe a URL da imagem.');
+  if (!validHttpsUrl(url)) return toast('Informe um endereço válido, começando com https://');
+  if (alt.length > 120) return toast('A descrição pode ter até 120 caracteres.');
+
+  try {
+    const snap = await db.collection('galeria').orderBy('ordem', 'desc').limit(1).get();
+    const ordem = snap.empty ? 1 : (+snap.docs[0].data().ordem || 0) + 1;
+    await db.collection('galeria').add({ url, alt, ordem });
+    document.getElementById('galUrl').value = ''; document.getElementById('galAlt').value = '';
+    renderAdminGaleria(); toast('Foto adicionada.');
+  } catch(e) { console.error(e); toast('Erro ao adicionar foto.'); }
 }

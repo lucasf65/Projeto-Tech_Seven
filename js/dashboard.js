@@ -115,8 +115,8 @@ function renderWeekSummary() {
    - Faturamento = soma do preço dos agendamentos "concluido"
    - Mês = mês da data do atendimento (campo "data")
    - "Confirmados hoje" ignora o mês selecionado
-   - Cancelado pela Carol = status "cancelado" + canceladoPor "carol"
-   - Cancelado com reagendamentos > 0 conta como "reagendado"
+   - Cancelamentos da Carol incluem registros antigos e novos
+   - O horário original registra cada troca confirmada
    ========================================================= */
 function aggregate(list, y, m, today) {
   const ym = ymKey(y, m), dim = new Date(y, m + 1, 0).getDate();
@@ -142,13 +142,13 @@ function aggregate(list, y, m, today) {
     const day = +a.data.slice(8, 10), wk = Math.min(Math.ceil(day / 7), 5) - 1;
     let sk = a.status;
     if (sk === 'cancelado') {
-      sk = a.canceladoPor === 'carol' ? 'cancelado-carol'
-         : (a.canceladoPor === 'reagendamento' || a.reagendamentos > 0) ? 'reagendado'
+      sk = ['carol', 'admin'].includes(a.canceladoPor) ? 'cancelado-carol'
+         : a.canceladoPor === 'reagendamento' ? 'reagendado'
          : 'cancelado-cliente';
     }
     if (sk in A.status) A.status[sk]++;
 
-    const rs = +a.reagendamentos || 0;
+    const rs = rescheduleCount(a);
     if (rs) { A.resched += rs; A.weeks.resched[wk] += rs; }
     if (sk === 'cancelado-carol') { A.cancelCarol++; A.weeks.cancel[wk]++; }
     if (a.status === 'pendente') A.pend++;

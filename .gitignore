@@ -1,0 +1,7 @@
+node_modules/
+public/
+.env
+.env.*
+.vercel/
+firestore-debug.log
+firebase-debug.log
